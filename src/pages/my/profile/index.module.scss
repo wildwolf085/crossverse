@@ -1,0 +1,98 @@
+@import "../../../common/css/rem";
+@import "../../../common/css/variables";
+
+.profile {
+  .head {
+  }
+
+  .body {
+
+  }
+
+  .order {
+    margin-top: 66px;
+  }
+
+  .orderList {
+
+  }
+
+  .title {
+    padding: rem(70px) 0;
+    text-align: center;
+  }
+
+  .titleWithLink {
+    text-align: left;
+    margin-bottom: rem(28px);
+
+    & > div {
+      display: flex;
+      align-items: center;
+    }
+  }
+
+  .titleExtra {
+    padding-left: 40px;
+  }
+
+  .subTitle {
+    font-size: $font-size-xxl;
+    line-height: $line-height-en;
+    padding-top: 20px;
+    padding-bottom: 48px;
+  }
+
+  .clipAddress {
+    display: inline-block;
+    max-width: 236px;
+
+  }
+}
+
+@media only screen and (max-width: $breakpoint-sm) {
+  .profile {
+    .body {
+      padding: 0 16px;
+    }
+
+    .purchased {
+      .titlePadding {
+        margin-bottom: 42px;
+      }
+    }
+
+    .purchasedList {
+      padding-right: 28px;
+      padding-left: 28px;
+    }
+
+    .purchasedRow {
+    }
+
+    .titleWithLink {
+      & > div {
+        justify-content: space-between;
+      }
+    }
+
+    .titlePadding {
+      padding: 0;
+    }
+
+    .titleExtra {
+      padding-left: 0;
+    }
+
+    .subTitle {
+      font-size: 27px;
+      padding-top: 30px;
+      padding-bottom: 16px;
+    }
+
+    .transaction {
+      margin-top: 24px;
+      margin-bottom: 50px;
+    }
+  }
+}

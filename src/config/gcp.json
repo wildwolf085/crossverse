@@ -1,0 +1,13 @@
+{
+    "type": "service_account",
+    "project_id": "gentle-current-321902",
+    "private_key_id": "817ca3b825d9bf91d70894c850c244cb711f17cb",
+    "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDN4cc/kYcw7qYm\nSXNdfaK5+l+uzkRNCvAJ2Wdj3SctgOpl9iopqmR/TVpeF04rW4kLJmTWkvfaNsQO\nhasxLqi1cBiKB6xstUBvegaVNKMHZ6J14uIT3M45K136GgzJGo7e/r4env76K7P0\n+n+C79IzvvLZIkNYrmbzgYnY+RSK9/zY0vKNw646xa7Dz1+2fa5aDxWPeNAvByTu\nJicl3pkklQQnA7r1lUsr1rrQmeh7Tm4ZjvJpAxx/Nup9tBXkrejKmLle3Ab64jy6\n/KQuxQnW9MouHcWAqXJAeW0J0on6u9LDoIO4afy1Kdp32+wfCBvDVcdNs3Ek8SjQ\n2BNLVlLjAgMBAAECggEAAmW/12Z/RQYaauANwbJzVn1rEig2amaXX1NSnWVCDgkY\nxwGEAdfeng7itQLKIb4fTUEas9b39Oi7WryavugKBebdb59hliMm3MV2gH6hlrX8\nZyldCZnXeu9ILl/m8zaQda9Qu8mNMuZBt7dtDF4fkVkGue7otYZ+Y2qIQOhm9qv2\n7b5HKRYo5rnzz2++XTVXSCnKg1VEQD1uF7hkqb4bTeyTBO5zmHdg96+XvTIXPAuz\nIFVl4kFZdm+bdHRaddGbujyItIzQzTAsW5zG9pUaGx2AM+XQM420OUg7SmOdEDcN\nDrTE6vjKWvBfUTxrSxin6QiNYzCu7CEMZpK/2IgrQQKBgQDoVF7JVO2RgDc4HjvY\nuZO7z+s+plPXQksiwU1ApQKAwXY6TEZIswMVSTZPGy+mWGv1Tf0Py4C1vymQGsLM\n1yReQ/VGHnzVxnMJsd5yEh09PXPJkdfkjLOILk2IRHHDq1OlrnzwkHqXd/d37pyx\nfhDx/bm0JCuItAxX3GcV0ar9IwKBgQDi25mYaU/+k7GsPkwWr6MPYuyn2dgD/gFH\nK58+O4AAAFEReEwAStqh/Qz2UXQtZ53tdnh8ehj/rEsciD29SFQwn3xHVgBBXFxX\n1rM4Mm//ESp2f068GUhXNPX5eN96DdhYxZXAhyGoh9AR000HPqQxwlLc2ch/yhNu\n2jny0H0PQQKBgGcp17EU2izqvxpXKoHw3a3fBHmcR8xk7pIvPYt/+h2MSmBWsDrl\n6m+QQ+Jakw0NZFrX15Ak8DFEAkOv7mIhAlAtYwNQ1GPkq/5ZEgqbCoq/9+NAtJoS\n9EF7NghVRCL7t7fxRB9aOGV76tJBjSivbvzVipl4GjCoqnZ1Mv0YThH7AoGBAIso\nG8LDLv/Bh2ZZ3IC6AnMownSAC6L/R7dpicg55V2a1B+8RBqV0CE3waDC/Fnxyo1k\nc6ofl4AWJwj8haq7WHFvE2QK3CM7zaVQHSWmws6asAp6M0js1VQxN4VtYOBU59Yk\ndaTg/4OKs9aLYB/GjB+9zOiOaxAAXAVOtec9fslBAoGBAJ+965N0iZ2hIx4680Sd\ndgn7z3ySN5ZClXO7lsB+2RCYrIvwexna0ZpBuGmbZIzuimhFCcDpe6uamcGHfTD3\n9A7a9eMKYcFh1drPsvciNzFZv6Wf4psOo2+pWvk4CFD6dlvLmK8gi5vIlqiKEJkK\nLvZMDpObl+caFwtxkeVMA0pW\n-----END PRIVATE KEY-----\n",
+    "client_email": "crossverse@gentle-current-321902.iam.gserviceaccount.com",
+    "client_id": "106306013354926557910",
+    "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+    "token_uri": "https://oauth2.googleapis.com/token",
+    "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+    "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/crossverse%40gentle-current-321902.iam.gserviceaccount.com"
+}
+  

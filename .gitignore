@@ -1,0 +1,13 @@
+node_modules
+dist
+coverage
+.next
+.DS_Store
+.idea
+.project
+.vscode
+.jest
+out
+tmp
+yarn.lock
+package-lock.json
