@@ -11,10 +11,13 @@ const getFileFromRequest = (req: any) => {
 	return new Promise((resolve) => {
 		const form = new formidable.IncomingForm({ uploadDir: temp })
 		form.parse(req, async (err: any, flds: any, files: any) => {
+			
 			if (files) {
 				const result = []
 				for (const k in files) result.push(files[k])
-				resolve(result)
+				return resolve(result)
+			} else {
+				console.log(err, flds)
 			}
 			resolve(null)
 		})

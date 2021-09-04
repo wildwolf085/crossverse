@@ -26,7 +26,7 @@ interface ListSellStatus {
     errmsg: string
 }
 
-const ListSell: React.FC<ListSellProps> = ({ visible, art, balance, onClose, onUpdate, }) => {
+const ListSell: React.FC<ListSellProps> = ({ visible, art, onClose, onUpdate, }) => {
     const [status, setStatus] = React.useState<ListSellStatus>({
         loading: false,
         price: art?.price || 0,

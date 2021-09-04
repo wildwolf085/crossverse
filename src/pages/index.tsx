@@ -29,9 +29,9 @@ const HomePage = (props: any) => {
 
   /* useEffect(() => setWorkItems(mockSales), []) */
 
-  const renderExtra = (quantity?: number) => {
+/*   const renderExtra = (quantity?: number) => {
     return <div>{`${quantity}pcs`}</div>
-  }
+  } */
 
   return (
     <Page className={styles.index}>
@@ -79,7 +79,7 @@ const HomePage = (props: any) => {
                 priceFIAT={v.price * ethPrice}
                 thumbnail={v.thumbnail}
                 href={getViewURL(v.id)}
-                extra={renderExtra(v.amount || 1)}
+                /* extra={renderExtra(v.instock || 1)} */
               />
             ))}
             {isDesktop && (
@@ -104,7 +104,7 @@ const HomePage = (props: any) => {
                 priceFIAT={v.price * ethPrice}
                 thumbnail={v.thumbnail}
                 href={getViewURL(v.id)}
-                extra={renderExtra(v.amount || 1)}
+                /* extra={renderExtra(v.amount || 1)} */
               />
             ))}
             {isDesktop && (

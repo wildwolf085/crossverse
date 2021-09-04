@@ -21,7 +21,7 @@ interface AccountProps {
 }
 
 const MyAccountPage = ({ isDesktop, isMobile, data }: AccountProps) => {
-	const { email, alias, address, subscribe, twitter, facebook, about } = data || {}
+	const { email, alias, subscribe, twitter, facebook, about } = data || {}
 	const [status, setStatus] = useState({
 		alias,
 		subscribe,
@@ -152,14 +152,14 @@ const MyAccountPage = ({ isDesktop, isMobile, data }: AccountProps) => {
 								}
 							/>
 						</Form.Item>
-						<Form.Item className={styles['form-item']} label="Wallet address">
+						{/* <Form.Item className={styles['form-item']} label="Wallet address">
 							<Input className={styles.input} value={address} disabled={true} />
 						</Form.Item>
 						{ address!=='' ? null : (
 							<div style={{textAlign:'right'}}>
 								<a href="/wallet/connect">Connect Wallet</a>
 							</div>
-						) }
+						) } */}
 						
 						<Form.Item className={styles['form-item']} label="About">
 							<TextArea
