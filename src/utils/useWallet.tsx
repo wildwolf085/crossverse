@@ -286,10 +286,10 @@ const useWallet = (checkBalance:boolean, tokenid?:number):UseWalletTypes => {
 		}
 		return { success: false }
 	}
-	const buy = async (params: any, value:number): Promise<SendTxResult> => {
+	const buy = async (params: any): Promise<SendTxResult> => {
 		try {
 			if (wallet.address) {
-				return await send( wallet.address, conf.storefront,  toHex(value * 1e18), abiStorefront, 'buy', params )
+				return await send( wallet.address, conf.storefront,  params[4], abiStorefront, 'buy', params )
 			} else {
                 update({err:'🦊 Connect to Metamask'})
             }

@@ -46,6 +46,7 @@ const CheckoutBuy: React.FC<CheckoutBuyProps> = ({ visible, art, args, ethPrice,
 			if (status.quantity>args.quantity) {
 				err = '❌ The quantity is too much. <=' + args.quantity
 			} else {
+				console.log('price:', price, price * status.quantity)
 				setError(err)
 				setStatus({ ...status, loading: true })
 				const res = await call('/api/artwork/' + art.id, { action: 'buy', pid:args.id, count:status.quantity, buyer:wallet.address, buyPrice:price })
@@ -53,7 +54,7 @@ const CheckoutBuy: React.FC<CheckoutBuyProps> = ({ visible, art, args, ethPrice,
 					let result = null;
 					const amount = price * status.quantity;
 					if (status.token==='ETH') {
-						result = await wallet.buy(res.msg, amount)
+						result = await wallet.buy(res.msg, res.msg[4])
 					} else {
 						const approval = await wallet.approval(); 
 						if (approval<amount) {

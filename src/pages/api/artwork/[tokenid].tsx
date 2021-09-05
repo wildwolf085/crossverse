@@ -53,28 +53,29 @@ export default async ( req: NextApiRequest, res: NextApiResponse<ApiResponse> ):
                     if (priceETH!==buyPrice) {
                         return res.json({ status: 'err', msg: 'refresh page, please' })
                     }
-                    const amount = toHex(priceETH * count * 1e18)
-                    const price = toHex(priceETH * 1e18)
+                    const price = Math.round(priceETH * 1e18)
+                    const priceHex = toHex(price)
+                    const amount = toHex(price * count)
                     const pidHex = toHex(pid)
                     const msg = await setMyWallet(id, buyer)
                     if (msg===null) {
-                        const signature = await sign( buyer, seller, tokenid, price, quantity, amount, timestamp )
+                        const signature = await sign( buyer, seller, tokenid, priceHex, quantity, amount, timestamp )
                         if (signature) {
-                            return res.json({ status: 'ok', msg: [ pidHex, tokenid, price, quantity, amount, timestamp, seller, signature ] })
+                            return res.json({ status: 'ok', msg: [ pidHex, tokenid, priceHex, quantity, amount, timestamp, seller, signature ] })
                         } else {
                             return res.json({ status: 'err', msg: 'bad signature' })
                         }
                     } else {
                         return res.json({ status: 'err', msg })
                     }
-                    
                 } else if (action === 'sell') {
                     const { seller, pid, count, sellPrice } = req.body
                     const offer = await getOfferById(pid)
                     if (offer !== null) {
-                        const price = toHex(offer.price * 1e18)
+                        const price = Math.round(offer.price * 1e18)
+                        const priceHex = toHex(price)
                         const quantity = toHex(count)
-                        const amount = toHex(offer.price * count * 1e18)
+                        const amount = toHex(price * count)
                         const buyer = offer.buyer
                         if (count > offer.quantity) {
                             return res.json({ status: 'err', msg: 'out of balance' })
@@ -84,9 +85,9 @@ export default async ( req: NextApiRequest, res: NextApiResponse<ApiResponse> ):
                         }
                         const msg = await setMyWallet(id, seller)
                         if (msg===null) {
-                            const signature = await sign( buyer, seller, tokenid, price, quantity, amount, timestamp )
+                            const signature = await sign( buyer, seller, tokenid, priceHex, quantity, amount, timestamp )
                             if (signature) {
-                                return res.json({ status: 'ok', msg: [ pid, tokenid, price, quantity, amount, timestamp, buyer, signature ] })
+                                return res.json({ status: 'ok', msg: [ pid, tokenid, priceHex, quantity, amount, timestamp, buyer, signature ] })
                             } else {
                                 return res.json({ status: 'err', msg: 'bad signature' })
                             }
