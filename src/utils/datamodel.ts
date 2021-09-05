@@ -284,9 +284,9 @@ export const updateOffer = async ( uid: number, offer: Offer ): Promise<boolean>
     }
     return false
 }
-export const deleteOffer = async ( uid: number, txid: string ): Promise<boolean> => {
+export const deleteOffer = async ( uid: number, tokenid:number ): Promise<boolean> => {
     try {
-        const result = await Offers.delete({ uid, txid })
+        const result = await Offers.delete({ uid, tokenid })
         return result !== null
     } catch (err:any) {
         setlog(err)

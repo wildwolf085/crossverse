@@ -53,6 +53,8 @@ interface ViewPageProp {
     myOwn: number
 }
 interface ViewPageStatus {
+    loadingDeleteOffers:boolean
+    loadingDelist:boolean
     showMakeOffer: boolean
     showCheckoutBuy: boolean
     showCheckoutSell: boolean
@@ -72,9 +74,7 @@ interface ViewPageStatus {
 
 const { Panel } = Collapse
 const PAGE_NAME = 'Detail'
-const TradeAttr: {
-    [event: number]: { icon: IconDefinition; label: string }
-} = {
+const TradeAttr: { [event: number]: { icon: IconDefinition; label: string } } = {
     0: {
         icon: faPlusSquare,
         label: 'Created',
@@ -93,19 +93,10 @@ const TradeAttr: {
     },
 }
 
-const ViewPage = ({
-    isDesktop,
-    logged,
-    art,
-    listings,
-    offers,
-    trades,
-    ethPrice,
-    hodlerCount,
-    liked,
-    myOwn,
-}: ViewPageProp): any => {
+const ViewPage = ({ isDesktop, logged, art, listings, offers, trades, ethPrice, hodlerCount, liked, myOwn }: ViewPageProp): any => {
     const [status, setStatus] = React.useState<ViewPageStatus>({
+        loadingDeleteOffers:false,
+        loadingDelist:false,
         showMakeOffer: false,
         showCheckoutBuy: false,
         showCheckoutSell: false,
@@ -120,7 +111,7 @@ const ViewPage = ({
             id: 0,
             price: 0,
             quantity: 0,
-        },
+        }
     })
     const auction = !!art?.auction && !!art?.drop
     const router = useRouter()
@@ -130,9 +121,11 @@ const ViewPage = ({
     let averagePrice = 0
     const price = art?.price || 0
     let topPrice = price
+    let hasOffers = false;
     if (status.offers.length) {
         let sum = 0
         status.offers.map((v: any) => {
+            if (!hasOffers && v.mine) hasOffers = true;
             if (topPrice < v.price) topPrice = v.price
             sum += v.price
         })
@@ -149,7 +142,9 @@ const ViewPage = ({
             ys.push(v.price)
         }
     })
+
     let hasList = false
+
     for (const v of status.listings) {
         if (v.mine) {
             hasList = true
@@ -179,6 +174,7 @@ const ViewPage = ({
             },
         ],
     }
+
     const onLike = async () => {
         const res = (await call('/api/artwork/' + tokenid, {
             action: 'like',
@@ -187,36 +183,41 @@ const ViewPage = ({
             setStatus({ ...status, favorited: true, likes: 1 })
         }
     }
+
     const onBuy = async (id: number, price: number, quantity: number) => {
-        setStatus({
-            ...status,
-            args: { id, price, quantity },
-            showCheckoutBuy: true,
-        })
+        setStatus({ ...status, args: { id, price, quantity }, showCheckoutBuy: true })
     }
+
     const onSell = async (id: string, price: number, quantity: number) => {
-        setStatus({
-            ...status,
-            args: { id, price, quantity },
-            showCheckoutSell: true,
-        })
+        setStatus({ ...status, args: { id, price, quantity }, showCheckoutSell: true })
     }
+
     const onList = async () => {
         setStatus({ ...status, showListSell: true })
     }
+
     const onDelist = async () => {
-        let res = (await call('/api/artwork/' + tokenid, {
-            action: 'delist',
-        })) as ApiResponse
+        setStatus({...status, loadingDelist:true})
+        let res = (await call('/api/artwork/' + tokenid, { action: 'delist' })) as ApiResponse
         if (res.status === 'ok') {
-            res = (await call('/api/artwork/' + tokenid, {
-                action: 'listing',
-            })) as ApiResponse
+            res = (await call('/api/artwork/' + tokenid, { action: 'listing' })) as ApiResponse
+            if (res.status === 'ok') return setStatus({ ...status, loadingDelist:false, listings: res.msg })
+        }
+        setStatus({...status, loadingDelist:false})
+    }
+
+    const onCancelOffers = async () => {
+        setStatus({...status, loadingDeleteOffers:true})
+        let res = (await call('/api/artwork/' + tokenid, {action: 'deleteOffer' })) as ApiResponse
+        if (res.status === 'ok') {
+            res = (await call('/api/artwork/' + tokenid, {action: 'offers',})) as ApiResponse
             if (res.status === 'ok') {
-                setStatus({ ...status, listings: res.msg })
+                return setStatus({ ...status, loadingDeleteOffers:false, offers: res.msg })
             }
         }
+        setStatus({...status, loadingDeleteOffers:false})
     }
+
     return (
         <Page className={styles.view} title={PAGE_NAME}>
             <div className={styles.wrap}>
@@ -232,13 +233,7 @@ const ViewPage = ({
                             <div className={styles[`artworkView-name`]}>
                                 {art?.title || 'Not found'}
                             </div>
-                            <div
-                                style={{
-                                    color: 'black',
-                                    fontSize: 20,
-                                    marginTop: 20,
-                                }}
-                            >
+                            <div style={{ color: 'black', fontSize: 20, marginTop: 20}}>
                                 <b>{art?.author}</b>
                                 <small
                                     style={{
@@ -251,65 +246,36 @@ const ViewPage = ({
                                     {art?.worknumber}
                                 </small>
                             </div>
-                            <div
-                                style={{
-                                    display: 'flex',
-                                    flexWrap: 'wrap',
-                                    marginTop: 10,
-                                }}
-                            >
+                            <div style={{ display: 'flex', flexWrap: 'wrap', marginTop: 10}}>
                                 <div className={styles['artworkView-item']}>
                                     <div>
-                                        <FontAwesomeIcon
-                                            icon={faUserFriends}
-                                            style={{ marginRight: 10 }}
-                                        />
+                                        <FontAwesomeIcon icon={faUserFriends} style={{ marginRight: 10 }}/>
                                         <span>{hodlerCount} Hodlers</span>
                                     </div>
                                 </div>
                                 <div className={styles['artworkView-item']}>
                                     <div>
-                                        <FontAwesomeIcon
-                                            icon={faUserAlt}
-                                            style={{ marginRight: 10 }}
-                                        />
+                                        <FontAwesomeIcon icon={faUserAlt} style={{ marginRight: 10 }}/>
                                         <span>You own {myOwn}</span>
                                     </div>
                                 </div>
 
                                 <div className={styles['artworkView-item']}>
                                     <div>
-                                        <FontAwesomeIcon
-                                            icon={faEye}
-                                            style={{ marginRight: 10 }}
-                                        />
+                                        <FontAwesomeIcon icon={faEye} style={{ marginRight: 10 }}/>
                                         <span>Views {art?.views}</span>
                                     </div>
                                 </div>
                                 <div className={styles['artworkView-item']}>
                                     {logged && !status.favorited ? (
                                         <a onClick={onLike}>
-                                            <FontAwesomeIcon
-                                                icon={faHeart}
-                                                style={{ marginRight: 10 }}
-                                            />
-                                            <span>
-                                                Likes{' '}
-                                                {(art?.likes || 0) +
-                                                    status.likes}
-                                            </span>
+                                            <FontAwesomeIcon icon={faHeart} style={{ marginRight: 10 }} />
+                                            <span>Likes {(art?.likes || 0) + status.likes}</span>
                                         </a>
                                     ) : (
                                         <div>
-                                            <FontAwesomeIcon
-                                                icon={faHeart}
-                                                style={{ marginRight: 10 }}
-                                            />
-                                            <span>
-                                                Likes{' '}
-                                                {(art?.likes || 0) +
-                                                    status.likes}
-                                            </span>
+                                            <FontAwesomeIcon icon={faHeart} style={{ marginRight: 10 }} />
+                                            <span>Likes {(art?.likes || 0) + status.likes}</span>
                                         </div>
                                     )}
                                 </div>
@@ -317,115 +283,40 @@ const ViewPage = ({
 
                             <div className={styles[`artworkView-trade`]}>
                                 {auction ? (
-                                    <div
-                                        className={styles[`artworkView-field`]}
-                                    >
-                                        Sale ends in{' '}
-                                        {new Date(
-                                            (art?.auctiontime || 0) * 1000
-                                        ).toString()}
+                                    <div className={styles[`artworkView-field`]}>
+                                        Sale ends in{' '}{new Date((art?.auctiontime || 0) * 1000).toString()}
                                     </div>
                                 ) : averagePrice ? (
                                     <>
-                                        <div
-                                            className={
-                                                styles[`artworkView-field`]
-                                            }
-                                        >
-                                            <div
-                                                className={
-                                                    styles[
-                                                        `artworkView-field-label`
-                                                    ]
-                                                }
-                                            >
+                                        <div className={ styles[`artworkView-field`]  } >
+                                            <div className={ styles[ `artworkView-field-label` ]}>
                                                 Trade volume
                                             </div>
-                                            <div
-                                                className={
-                                                    styles[
-                                                        `artworkView-field-value`
-                                                    ]
-                                                }
-                                            >
-                                                {Number(
-                                                    (art?.volume || 0).toFixed(
-                                                        6
-                                                    )
-                                                )}{' '}
-                                                ETH
+                                            <div className={ styles[ `artworkView-field-value` ] }>
+                                                {Number( (art?.volume || 0).toFixed( 6 ) )} ETH
                                             </div>
                                         </div>
-                                        <div
-                                            className={
-                                                styles[`artworkView-field`]
-                                            }
-                                        >
-                                            <div
-                                                className={
-                                                    styles[
-                                                        `artworkView-field-label`
-                                                    ]
-                                                }
-                                            >
+                                        <div className={ styles[`artworkView-field`]  } >
+                                            <div className={ styles[ `artworkView-field-label`]}>
                                                 Average price
                                             </div>
-                                            <div
-                                                className={
-                                                    styles[
-                                                        `artworkView-field-value`
-                                                    ]
-                                                }
-                                            >
-                                                {Number(
-                                                    averagePrice.toFixed(6)
-                                                )}{' '}
-                                                ETH
+                                            <div className={ styles[ `artworkView-field-value`]}>
+                                                {Number( averagePrice.toFixed(6) )} ETH
                                             </div>
                                         </div>
                                     </>
                                 ) : null}
 
                                 <div className={styles[`artworkView-field`]}>
-                                    <div
-                                        className={
-                                            styles[`artworkView-field-label`]
-                                        }
-                                    >
+                                    <div className={ styles[`artworkView-field-label`] }>
                                         {auction ? 'Top bid' : 'Current price'}
                                     </div>
-                                    <div
-                                        className={
-                                            styles[`artworkView-field-value`]
-                                        }
-                                    >
-                                        <div
-                                            className={
-                                                styles[`artworkView-alt`]
-                                            }
-                                        >
-                                            <span>
-                                                {Number(
-                                                    auction ? topPrice : price
-                                                )}{' '}
-                                                ETH
-                                            </span>
-                                            <Image
-                                                className={
-                                                    styles[
-                                                        `artworkView-icon-eth`
-                                                    ]
-                                                }
-                                                alt="eth"
-                                                preview={false}
-                                                src="/images/eth.png"
-                                            />
+                                    <div className={ styles[`artworkView-field-value`] }>
+                                        <div className={ styles[`artworkView-alt`] }>
+                                            <span>{Number( auction ? topPrice : price )} ETH</span>
+                                            <Image className={ styles[`artworkView-icon-eth`]} alt="eth" preview={false} src="/images/eth.png" />
                                         </div>
-                                        <div
-                                            className={
-                                                styles[`artworkView-fiat`]
-                                            }
-                                        >
+                                        <div className={ styles[`artworkView-fiat`] }>
                                             $ {(price * ethPrice).toFixed(2)}
                                         </div>
                                     </div>
@@ -433,40 +324,11 @@ const ViewPage = ({
                                 <div className={styles[`artworkView-submit`]}>
                                     {art?.instock ? (
                                         auction ? (
-                                            <Button
-                                                block
-                                                className={
-                                                    styles[
-                                                        `artworkView-submit-btn`
-                                                    ]
-                                                }
-                                                type="primary"
-                                                onClick={() =>
-                                                    setStatus({
-                                                        ...status,
-                                                        showMakeOffer: true,
-                                                    })
-                                                }
-                                            >
+                                            <Button block className={ styles[ `artworkView-submit-btn` ] } type="primary" onClick={() => setStatus({ ...status, showMakeOffer: true, }) }>
                                                 Place bid
                                             </Button>
                                         ) : (
-                                            <Button
-                                                block
-                                                className={
-                                                    styles[
-                                                        `artworkView-submit-btn`
-                                                    ]
-                                                }
-                                                type="primary"
-                                                onClick={() =>
-                                                    onBuy(
-                                                        0,
-                                                        art?.price || 0,
-                                                        art?.instock || 0
-                                                    )
-                                                }
-                                            >
+                                            <Button block className={ styles[ `artworkView-submit-btn` ] } type="primary" onClick={() => onBuy( 0, art?.price || 0, art?.instock || 0 )}>
                                                 Buy Now
                                             </Button>
                                         )
@@ -520,12 +382,7 @@ const ViewPage = ({
                                     <ReactECharts option={priceChartOptions} />
                                 ) : (
                                     <div style={{ textAlign: 'center' }}>
-                                        <img
-                                            src="/images/no-chart-data.svg"
-                                            width={207}
-                                            height={101}
-                                            alt="No trading"
-                                        />
+                                        <img src="/images/no-chart-data.svg" width={207} height={101} alt="No trading" />
                                         <div>No trading data yet</div>
                                     </div>
                                 )}
@@ -538,32 +395,16 @@ const ViewPage = ({
                                         <thead>
                                             <tr>
                                                 <th></th>
-                                                <th
-                                                    style={{
-                                                        textAlign: 'center',
-                                                    }}
-                                                >
+                                                <th style={{ textAlign: 'center' }}>
                                                     From
                                                 </th>
-                                                <th
-                                                    style={{
-                                                        textAlign: 'right',
-                                                    }}
-                                                >
+                                                <th style={{ textAlign: 'right' }}>
                                                     Price
                                                 </th>
-                                                <th
-                                                    style={{
-                                                        textAlign: 'right',
-                                                    }}
-                                                >
+                                                <th style={{ textAlign: 'right' }}>
                                                     Quantity
                                                 </th>
-                                                <th
-                                                    style={{
-                                                        textAlign: 'center',
-                                                    }}
-                                                >
+                                                <th style={{ textAlign: 'center' }}>
                                                     Created
                                                 </th>
                                             </tr>
@@ -578,36 +419,17 @@ const ViewPage = ({
                                                             </button>
                                                         ) : null}
                                                     </td>
-                                                    <td
-                                                        style={{
-                                                            textAlign: 'center',
-                                                        }}
-                                                    >
+                                                    <td style={{ textAlign: 'center' }} >
                                                         {v.owner || '-'}
                                                     </td>
-                                                    <td
-                                                        style={{
-                                                            textAlign: 'right',
-                                                        }}
-                                                    >
+                                                    <td style={{ textAlign: 'right' }} >
                                                         {Number((v?.sellPrice || 0).toFixed(6))} WETH
                                                     </td>
-                                                    <td
-                                                        style={{
-                                                            textAlign: 'right',
-                                                        }}
-                                                    >
+                                                    <td style={{ textAlign: 'right' }} >
                                                         {v.sellBalance || 0}
                                                     </td>
-                                                    <td
-                                                        style={{
-                                                            textAlign: 'center',
-                                                        }}
-                                                    >
-                                                        {offsetDate(
-                                                            v.created,
-                                                            0
-                                                        )}
+                                                    <td style={{ textAlign: 'center' }} >
+                                                        {offsetDate( v.created, 0 )}
                                                     </td>
                                                 </tr>
                                             ))}
@@ -615,12 +437,7 @@ const ViewPage = ({
                                     </table>
                                 ) : (
                                     <div style={{ textAlign: 'center' }}>
-                                        <img
-                                            src="/images/empty-asks.svg"
-                                            width={156}
-                                            height={114}
-                                            alt="empty offers"
-                                        />
+                                        <img src="/images/empty-asks.svg" width={156} height={114} alt="empty offers" />
                                         <div>No listings</div>
                                     </div>
                                 )}
@@ -629,25 +446,11 @@ const ViewPage = ({
                                     <div className={styles.makeOffer}>
                                         {!art?.drop ? (
                                             hasList ? (
-                                                <Button
-                                                    onClick={onDelist}
-                                                    className={styles.btn}
-                                                    wrapClassName={
-                                                        styles.btnWrap
-                                                    }
-                                                    type="primary"
-                                                >
+                                                <Button onClick={onDelist} loading={status.loadingDelist} className={styles.btn} wrapClassName={ styles.btnWrap } type="primary" >
                                                     Delist my collectibles
                                                 </Button>
                                             ) : (
-                                                <Button
-                                                    onClick={onList}
-                                                    className={styles.btn}
-                                                    wrapClassName={
-                                                        styles.btnWrap
-                                                    }
-                                                    type="primary"
-                                                >
+                                                <Button onClick={onList} className={styles.btn} wrapClassName={ styles.btnWrap } type="primary" >
                                                     Sell my collectibles
                                                 </Button>
                                             )
@@ -685,56 +488,24 @@ const ViewPage = ({
                                             <tr key={v.art.id}>
                                                 <td>
                                                     {!art?.drop ? (
-                                                        <button
-                                                            onClick={() =>
-                                                                onSell(
-                                                                    v.txid,
-                                                                    v.price,
-                                                                    v.quantity
-                                                                )
-                                                            }
-                                                        >
+                                                        <button onClick={() => onSell( v.txid, v.price, v.quantity ) } >
                                                             Sell
                                                         </button>
                                                     ) : null}
                                                 </td>
-                                                <td
-                                                    style={{
-                                                        textAlign: 'left',
-                                                    }}
-                                                >
+                                                <td style={{ textAlign: 'left' }}>
                                                     {v.from || '-'}
                                                 </td>
-                                                <td
-                                                    style={{
-                                                        textAlign: 'right',
-                                                    }}
-                                                >
-                                                    {Number(v.price.toFixed(6))}{' '}
-                                                    WETH
+                                                <td style={{ textAlign: 'right' }}>
+                                                    {Number(v.price.toFixed(6))} WETH
                                                 </td>
-                                                <td
-                                                    style={{
-                                                        textAlign: 'right',
-                                                    }}
-                                                >
+                                                <td style={{ textAlign: 'right' }}>
                                                     {v.quantity}
                                                 </td>
-                                                <td
-                                                    style={{
-                                                        textAlign: 'right',
-                                                    }}
-                                                >
-                                                    {Number(
-                                                        v.amount.toFixed(6)
-                                                    )}{' '}
-                                                    WETH
+                                                <td style={{ textAlign: 'right' }}>
+                                                    {Number( v.amount.toFixed(6) )} WETH
                                                 </td>
-                                                <td
-                                                    style={{
-                                                        textAlign: 'center',
-                                                    }}
-                                                >
+                                                <td style={{ textAlign: 'center' }}>
                                                     {offsetDate(v.created, 0)}
                                                 </td>
                                             </tr>
@@ -743,30 +514,22 @@ const ViewPage = ({
                                 </table>
                             ) : (
                                 <div style={{ textAlign: 'center' }}>
-                                    <img
-                                        src="/images/empty-bids.svg"
-                                        width={156}
-                                        height={114}
-                                        alt="empty offers"
-                                    />
+                                    <img src="/images/empty-bids.svg" width={156} height={114} alt="empty offers" />
                                     <div>No offers yet</div>
                                 </div>
                             )}
                             {!art?.drop ? (
                                 <div className={styles.makeOffer}>
-                                    <Button
-                                        onClick={() =>
-                                            setStatus({
-                                                ...status,
-                                                showMakeOffer: true,
-                                            })
-                                        }
-                                        className={styles.btn}
-                                        wrapClassName={styles.btnWrap}
-                                        type="primary"
-                                    >
-                                        Make an offer
-                                    </Button>
+                                    {hasOffers?(
+                                        <Button onClick={onCancelOffers} loading={status.loadingDeleteOffers} className={styles.btn} wrapClassName={styles.btnWrap} type="primary" >
+                                            Cancel Offer
+                                        </Button>
+                                    ) : (
+                                        <Button onClick={() => setStatus({ ...status, showMakeOffer: true }) } className={styles.btn} wrapClassName={styles.btnWrap} type="primary" >
+                                            Make an offer
+                                        </Button>
+                                    )}
+                                    
                                 </div>
                             ) : null}
                         </Panel>
@@ -800,51 +563,22 @@ const ViewPage = ({
                                         {trades.map((v) => (
                                             <tr key={v.created}>
                                                 <td>
-                                                    <FontAwesomeIcon
-                                                        icon={
-                                                            TradeAttr[v.event]
-                                                                .icon
-                                                        }
-                                                        style={{
-                                                            marginRight: 10,
-                                                        }}
-                                                    />
+                                                    <FontAwesomeIcon icon={ TradeAttr[v.event].icon } style={{ marginRight: 10 }} />
                                                     {TradeAttr[v.event].label}
                                                 </td>
-                                                <td
-                                                    style={{
-                                                        textAlign: 'right',
-                                                    }}
-                                                >
-                                                    {Number(v.price.toFixed(6))}{' '}
-                                                    WETH
+                                                <td style={{ textAlign: 'right' }}>
+                                                    {Number(v.price.toFixed(6))} WETH
                                                 </td>
-                                                <td
-                                                    style={{
-                                                        textAlign: 'right',
-                                                    }}
-                                                >
+                                                <td style={{ textAlign: 'right' }}>
                                                     {v.quantity}
                                                 </td>
-                                                <td
-                                                    style={{
-                                                        textAlign: 'center',
-                                                    }}
-                                                >
+                                                <td style={{ textAlign: 'center' }}>
                                                     {v.from || '-'}
                                                 </td>
-                                                <td
-                                                    style={{
-                                                        textAlign: 'center',
-                                                    }}
-                                                >
+                                                <td style={{ textAlign: 'center' }}>
                                                     {v.to || '-'}
                                                 </td>
-                                                <td
-                                                    style={{
-                                                        textAlign: 'center',
-                                                    }}
-                                                >
+                                                <td style={{ textAlign: 'center' }}>
                                                     {offsetDate(v.created, 0)}
                                                 </td>
                                             </tr>
@@ -853,12 +587,7 @@ const ViewPage = ({
                                 </table>
                             ) : (
                                 <div style={{ textAlign: 'center' }}>
-                                    <img
-                                        src="/images/empty-bids.svg"
-                                        width={156}
-                                        height={114}
-                                        alt="empty offers"
-                                    />
+                                    <img src="/images/empty-bids.svg" width={156} height={114} alt="empty offers" />
                                     <div>No trading data yet</div>
                                 </div>
                             )}

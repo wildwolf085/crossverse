@@ -10,6 +10,7 @@ import {
     updateTx,
     setArtLiked,
     updateOffer,
+    deleteOffer,
     getListings,
     addlist,
     delist,
@@ -117,6 +118,9 @@ export default async ( req: NextApiRequest, res: NextApiResponse<ApiResponse> ):
                     const { tx, offer } = req.body
                     await updateTx(id, tx)
                     await updateOffer(id, { ...offer, txid: tx.txid, buyer: tx.from, status: 0, created: now(), })
+                    return res.json({ status: 'ok' })
+                } else if (action === 'deleteOffer') {
+                    await deleteOffer(id, tokenid)
                     return res.json({ status: 'ok' })
                 } else if (action === 'check') {
                     await checktxs()
