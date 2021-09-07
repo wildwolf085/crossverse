@@ -387,11 +387,14 @@ const DialogArt: React.FC<DialogArtProps> = ({
 				instock <b style={{marginRight:20}}>{data.instock}</b>
 				circlulating <b style={{marginRight:20}}>{data.totalsupply - data.instock}</b>
 			</div>
-			<div>
-				<button onClick={()=>setStatus({...status, supplyvisible:true})}>
-					Add Supply
-				</button>
-			</div>
+			{data.auction ? null : (
+				<div>
+					<button onClick={()=>setStatus({...status, supplyvisible:true})}>
+						Add Supply
+					</button>
+				</div>
+			)}
+			
 			<Modal
 				visible={status.supplyvisible}
 				title="Add Supply"
