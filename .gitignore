@@ -11,7 +11,7 @@ out
 tmp
 yarn.lock
 package-lock.json
-
+logs
 gcp.json
 .env.development
 .env.production
