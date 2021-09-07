@@ -7,7 +7,7 @@ import {
     faUserFriends,
     faUserAlt,
     faEye,
-    faHeart,
+    /* faHeart, */
     faShoppingCart,
     faPlusSquare,
     faExchangeAlt,

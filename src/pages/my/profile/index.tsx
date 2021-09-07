@@ -1,27 +1,26 @@
-import React, { useEffect, useState } from 'react'
+import React from 'react'
 import { getSession } from 'next-auth/client'
 import { Row, Col, Table, Tooltip, Button } from 'antd'
 import classNames from 'classnames'
-import map from 'lodash/map'
-import ArtworkCard from '@/components/Artwork/Card'
+/* import map from 'lodash/map'
+import ArtworkCard from '@/components/Artwork/Card' */
 import CarouselArtwork from '@/components/Carousel/Artwork'
 import Page from '@/components/Page'
 import PageTitle from '@/components/Page/Title'
 import More from '@/components/More'
 import { ROW_TWO_ITEMS_XL } from '@/config'
-import { getOrderStatusText, ORDER_STATUS } from '@/utils/enums'
-import { getViewURL, offsetDate } from '@/utils/helper'
+/* import { getOrderStatusText } from '@/utils/enums' */
+import { offsetDate } from '@/utils/helper'
 /* import mockSales from '@/mock/sales.json' */
 /* import mockTransactions from '@/mock/transcation.json' */
 import styles from './index.module.scss'
-import { getPurchased, getETHPrice, getOffersByUID, getTxs, getOffersWons } from '@/utils/datamodel'
+import { getPurchased, getOffersByUID, getTxs, getOffersWons } from '@/utils/datamodel'
 
 const PAGE_NAME = 'My Profile'
 
 interface ProfilePageProps {
 	isDesktop:boolean
 	isMobile:boolean
-	ethPrice: number
 	my:Array<Artwork>
 	offers:Array<OfferWithArt>
 	wons:Array<OfferWithArt>
@@ -33,12 +32,12 @@ interface ProfilePageStatus {
 }
 
 
-const ProfilePage = ({isDesktop, isMobile, ethPrice, my, offers, wons, txs}: ProfilePageProps) => {
-	const [status, setStatus] = React.useState<ProfilePageStatus>({
+const ProfilePage = ({isDesktop, isMobile, my, offers, wons, txs}: ProfilePageProps) => {
+	const [status] = React.useState<ProfilePageStatus>({
 		loading:{}
 	})
 
-	const transactionColumns = [
+	/* const transactionColumns = [
 		{
 			title: 'From',
 			key: 'from',
@@ -76,15 +75,15 @@ const ProfilePage = ({isDesktop, isMobile, ethPrice, my, offers, wons, txs}: Pro
 				<span className={renderStatus(text)}>{text}</span>
 			),
 		},
-	]
+	] */
 
-	const renderExtra = (status: number) => {
+	/* const renderExtra = (status: number) => {
 		const text = getOrderStatusText(status)
 
 		return <div className={renderStatus(text)}>{text}</div>
-	}
+	} */
 
-	const renderStatus = (type?: string) => {
+	/* const renderStatus = (type?: string) => {
 		if (type === 'Completed') {
 			return 'text-status-primary'
 		}
@@ -98,7 +97,7 @@ const ProfilePage = ({isDesktop, isMobile, ethPrice, my, offers, wons, txs}: Pro
 		}
 
 		return ''
-	}
+	} */
 	const columns = [
         {
             title: 'From',
@@ -161,7 +160,7 @@ const ProfilePage = ({isDesktop, isMobile, ethPrice, my, offers, wons, txs}: Pro
         },
     ]
 	const onCancelOffers = (artid:number) => {
-
+		console.log(artid)
 	}
 	return (
 		<Page className={styles.profile} title={PAGE_NAME}>
@@ -354,7 +353,6 @@ const ProfilePage = ({isDesktop, isMobile, ethPrice, my, offers, wons, txs}: Pro
 }
 
 export async function getServerSideProps({ req }: any) {
-	const ethPrice = await getETHPrice()
 	const session: any = await getSession({ req })
 	let my:Array<Artwork> = [], offers:Array<OfferWithArt> = [], wons:Array<OfferWithArt> = [], txs:Array<Transaction> = [];
 	if (session && session.user) {
@@ -364,8 +362,8 @@ export async function getServerSideProps({ req }: any) {
 		wons = await getOffersWons(id)
 		txs = await getTxs(id)
 
-		return { props: { my, offers, wons, txs, ethPrice } }
+		return { props: { my, offers, wons, txs } }
 	}
-	return { props: { my, offers, wons, txs, ethPrice } }
+	return { props: { my, offers, wons, txs } }
 }
 export default ProfilePage

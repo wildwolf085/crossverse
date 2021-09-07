@@ -17,7 +17,6 @@ import {
   getResales,
   getETHPrice,
   checkArts,
-  wonInAuction
 } from '@/utils/datamodel'
 
 const { Title } = Typography
