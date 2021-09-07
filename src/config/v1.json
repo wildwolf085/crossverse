@@ -17,7 +17,7 @@
 		"explorer": "https://testnet.hecoinfo.com",
 		"blocktime": 3,
 		"confirmations": 1,
-		"storefront": "0xC0E90712581Da8b5fE33C9401E490129ffe37932",
+		"storefront": "0x6646C47d7dB6d729673cB846361C35166C2A5aAc",
 		"weth": {
 			"contract": "0xc209f1e9Eaea895cAbAC2873E8567768A864faf5",
 			"precision": 18
