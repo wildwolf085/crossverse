@@ -16,7 +16,8 @@ import {
   getSales,
   getResales,
   getETHPrice,
-  checkArts
+  checkArts,
+  wonInAuction
 } from '@/utils/datamodel'
 
 const { Title } = Typography
@@ -119,7 +120,8 @@ const HomePage = (props: any) => {
   )
 }
 export async function getServerSideProps() {
-    checkArts();
+  /* await wonInAuction(100000467); */
+  checkArts();
   const recommends = await getRecommended()
   const sales = await getSales()
   const resales = await getResales()

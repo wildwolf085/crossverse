@@ -1,5 +1,5 @@
 import React from 'react'
-import { Collapse, Image } from 'antd'
+import { Collapse, Image, Spin } from 'antd'
 /* import Link from 'next/link' */
 import { useRouter } from 'next/router'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -12,17 +12,18 @@ import {
     faPlusSquare,
     faExchangeAlt,
     IconDefinition,
+    faThumbsUp,
+    faThumbsDown,
 } from '@fortawesome/free-solid-svg-icons'
 
 import ArtworkCustomize from '@/components/Artwork/Customize'
 import Block from '@/components/Block'
 import Button from '@/components/Button'
 import Page from '@/components/Page'
-import Filter from './components/Filter'
 import styles from './index.module.scss'
 import ReactECharts from 'echarts-for-react'
 import { getSession } from 'next-auth/client'
-import { offsetDate, call } from '@/utils/helper'
+import { offsetDate, call, showTips } from '@/utils/helper'
 
 import {
     getETHPrice,
@@ -35,10 +36,10 @@ import {
     getArtLiked,
     getMyTokens,
 } from '@/utils/datamodel'
-import CheckoutBuy from '../components/CheckoutBuy'
-import CheckoutSell from '../components/CheckoutSell'
-import MakeOffer from '../components/MakeOffer'
-import ListSell from '../components/ListSell'
+import CheckoutBuy from '@/components/Dialogs/CheckoutBuy'
+import CheckoutSell from '@/components/Dialogs/CheckoutSell'
+import MakeOffer from '@/components/Dialogs/MakeOffer'
+import ListSell from '@/components/Dialogs/ListSell'
 
 interface ViewPageProp {
     isDesktop: boolean
@@ -49,20 +50,24 @@ interface ViewPageProp {
     trades: Array<Trade>
     ethPrice: number
     hodlerCount: number
-    liked: boolean
+    like: number
     myOwn: number
 }
 interface ViewPageStatus {
     loadingDeleteOffers:boolean
     loadingDelist:boolean
+    loadingLike:boolean
+    loadingDislike:boolean
     showMakeOffer: boolean
     showCheckoutBuy: boolean
     showCheckoutSell: boolean
     showListSell: boolean
     showOffer: boolean
-    favorited: boolean
-    price: number
+    filterTrade: number
+    like: number
     likes: number
+    dislikes: number
+    price: number
     listings: Array<Artwork>
     offers: Array<OfferWithArt>
     args: {
@@ -74,7 +79,7 @@ interface ViewPageStatus {
 
 const { Panel } = Collapse
 const PAGE_NAME = 'Detail'
-const TradeAttr: { [event: number]: { icon: IconDefinition; label: string } } = {
+const TradeAttrs: { [event: number]: { icon: IconDefinition; label: string } } = {
     0: {
         icon: faPlusSquare,
         label: 'Created',
@@ -86,25 +91,25 @@ const TradeAttr: { [event: number]: { icon: IconDefinition; label: string } } = 
     2: {
         icon: faExchangeAlt,
         label: 'Transfer',
-    },
-    3: {
-        icon: faShoppingCart,
-        label: 'List',
-    },
+    }
 }
 
-const ViewPage = ({ isDesktop, logged, art, listings, offers, trades, ethPrice, hodlerCount, liked, myOwn }: ViewPageProp): any => {
+const ViewPage = ({ isDesktop, logged, art, listings, offers, trades, ethPrice, hodlerCount, like, myOwn }: ViewPageProp): any => {
     const [status, setStatus] = React.useState<ViewPageStatus>({
         loadingDeleteOffers:false,
         loadingDelist:false,
+        loadingLike:false,
+        loadingDislike:false,
         showMakeOffer: false,
         showCheckoutBuy: false,
         showCheckoutSell: false,
         showListSell: false,
         showOffer: false,
-        favorited: liked,
+        like,
+        likes: art?.likes || 0,
+        dislikes: art?.dislikes || 0,
         price: art?.price || 0,
-        likes: 0,
+        filterTrade: -1,
         listings,
         offers,
         args: {
@@ -131,7 +136,7 @@ const ViewPage = ({ isDesktop, logged, art, listings, offers, trades, ethPrice, 
         })
         averagePrice = sum / offers.length
     }
-    trades.sort((a, b) => a.created - b.created)
+    
     trades.map((v: any) => {
         if (v.price && v.eid != 0) {
             const iOffset = 8
@@ -174,13 +179,26 @@ const ViewPage = ({ isDesktop, logged, art, listings, offers, trades, ethPrice, 
             },
         ],
     }
-
     const onLike = async () => {
-        const res = (await call('/api/artwork/' + tokenid, {
-            action: 'like',
-        })) as ApiResponse
+        if (!logged) return;
+        setStatus({ ...status, loadingLike:true })
+        const res = (await call('/api/artwork/' + tokenid, {action: 'like' })) as ApiResponse
         if (res.status === 'ok') {
-            setStatus({ ...status, favorited: true, likes: 1 })
+            setStatus({ ...status, loadingLike:false, ...res.msg, likes: 1 })
+        } else {
+            showTips(res.msg || 'unknown error')
+            setStatus({ ...status, loadingLike:false })
+        }
+    }
+    const onDislike = async () => {
+        if (!logged) return;
+        setStatus({ ...status, loadingDislike:true })
+        const res = (await call('/api/artwork/' + tokenid, {action: 'dislike' })) as ApiResponse
+        if (res.status === 'ok') {
+            setStatus({ ...status, loadingDislike:false, ...res.msg, dislikes: 1 })
+        } else {
+            showTips(res.msg || 'unknown error')
+            setStatus({ ...status, loadingDislike:false })
         }
     }
 
@@ -235,14 +253,7 @@ const ViewPage = ({ isDesktop, logged, art, listings, offers, trades, ethPrice, 
                             </div>
                             <div style={{ color: 'black', fontSize: 20, marginTop: 20}}>
                                 <b>{art?.author}</b>
-                                <small
-                                    style={{
-                                        backgroundColor: '#000',
-                                        color: 'white',
-                                        padding: '3px 5px',
-                                        marginLeft: 10,
-                                    }}
-                                >
+                                <small style={{ backgroundColor: '#000', color: 'white', padding: '3px 5px', marginLeft: 10 }} >
                                     {art?.worknumber}
                                 </small>
                             </div>
@@ -266,22 +277,30 @@ const ViewPage = ({ isDesktop, logged, art, listings, offers, trades, ethPrice, 
                                         <span>Views {art?.views}</span>
                                     </div>
                                 </div>
+                            </div>
+                            <div style={{ display: 'flex', flexWrap: 'wrap', marginTop: 10}}>
                                 <div className={styles['artworkView-item']}>
-                                    {logged && !status.favorited ? (
-                                        <a onClick={onLike}>
-                                            <FontAwesomeIcon icon={faHeart} style={{ marginRight: 10 }} />
-                                            <span>Likes {(art?.likes || 0) + status.likes}</span>
-                                        </a>
-                                    ) : (
-                                        <div>
-                                            <FontAwesomeIcon icon={faHeart} style={{ marginRight: 10 }} />
-                                            <span>Likes {(art?.likes || 0) + status.likes}</span>
-                                        </div>
-                                    )}
+                                    <a className={styles['artworkView-cmd']} onClick={onLike}>
+                                        {status.loadingLike ? <Spin size="small" style={{width:30}} /> : <FontAwesomeIcon icon={faThumbsUp} style={{ marginRight: 10 }} />}
+                                        <span>Likes { status.likes }</span>
+                                    </a>
+                                </div>
+                                <div className={styles['artworkView-item']}>
+                                    <a className={styles['artworkView-cmd']} onClick={onDislike}>
+                                        {status.loadingDislike ? <Spin size="small" style={{width:30}} /> : <FontAwesomeIcon icon={faThumbsDown} style={{ marginRight: 10 }} />}
+                                        <span>Dislikes { status.dislikes }</span>
+                                    </a>
                                 </div>
                             </div>
-
                             <div className={styles[`artworkView-trade`]}>
+                                <div className={ styles[`artworkView-field`]  } >
+                                    <div className={ styles[ `artworkView-field-label` ]}>
+                                        <span style={{color:'#888'}}>Total Supply</span> {art?.totalsupply || 0}
+                                    </div>
+                                    <div className={ styles[ `artworkView-field-value` ] }>
+                                        <span style={{color:'#888'}}>Circulating</span> {(art?.totalsupply || 0) - (art?.instock || 0)}    
+                                    </div>
+                                </div>
                                 {auction ? (
                                     <div className={styles[`artworkView-field`]}>
                                         Sale ends in{' '}{new Date((art?.auctiontime || 0) * 1000).toString()}
@@ -413,7 +432,7 @@ const ViewPage = ({ isDesktop, logged, art, listings, offers, trades, ethPrice, 
                                             {status.listings.map((v) => (
                                                 <tr key={v.id}>
                                                     <td>
-                                                        {!art?.drop ? (
+                                                        {(!art?.drop && !v?.mine) ? (
                                                             <button onClick={() => onBuy( v.ownerid || 0, v?.sellPrice || v.price, v.sellBalance || v.instock ) } >
                                                                 Buy
                                                             </button>
@@ -487,7 +506,7 @@ const ViewPage = ({ isDesktop, logged, art, listings, offers, trades, ethPrice, 
                                         {status.offers.map((v) => (
                                             <tr key={v.art.id}>
                                                 <td>
-                                                    {!art?.drop ? (
+                                                    {(!art?.drop && !v?.mine) ? (
                                                         <button onClick={() => onSell( v.txid, v.price, v.quantity ) } >
                                                             Sell
                                                         </button>
@@ -518,23 +537,28 @@ const ViewPage = ({ isDesktop, logged, art, listings, offers, trades, ethPrice, 
                                     <div>No offers yet</div>
                                 </div>
                             )}
-                            {!art?.drop ? (
-                                <div className={styles.makeOffer}>
-                                    {hasOffers?(
-                                        <Button onClick={onCancelOffers} loading={status.loadingDeleteOffers} className={styles.btn} wrapClassName={styles.btnWrap} type="primary" >
-                                            Cancel Offer
-                                        </Button>
-                                    ) : (
-                                        <Button onClick={() => setStatus({ ...status, showMakeOffer: true }) } className={styles.btn} wrapClassName={styles.btnWrap} type="primary" >
-                                            Make an offer
-                                        </Button>
-                                    )}
-                                    
-                                </div>
-                            ) : null}
+                            <div className={styles.makeOffer}>
+                            {hasOffers?(
+                                <Button onClick={onCancelOffers} loading={status.loadingDeleteOffers} className={styles.btn} wrapClassName={styles.btnWrap} type="primary" >
+                                    Cancel Offer
+                                </Button>
+                            ) : (
+                                !art?.drop ? (
+                                    <Button onClick={() => setStatus({ ...status, showMakeOffer: true }) } className={styles.btn} wrapClassName={styles.btnWrap} type="primary" >
+                                        Make an offer
+                                    </Button>
+                                ) : null
+                            )}
+                            </div>
                         </Panel>
                         <Panel header="Trade History" key="trade">
-                            <Filter onChange={() => console.log()} />
+                            <div>
+                                <select value={status.filterTrade} onChange={(e)=>setStatus({...status, filterTrade:Number(e.target.value)})} style={{ padding:10, outline:'none' }}>
+                                    <option value={-1}>- All -</option>
+                                    {Object.keys(TradeAttrs).map(k=><option key={k} value={k}>{TradeAttrs[Number(k)].label}</option>)}
+                                </select>
+                            </div>
+
                             {trades.length ? (
                                 <table>
                                     <thead>
@@ -561,10 +585,11 @@ const ViewPage = ({ isDesktop, logged, art, listings, offers, trades, ethPrice, 
                                     </thead>
                                     <tbody>
                                         {trades.map((v) => (
-                                            <tr key={v.created}>
+                                            
+                                            (status.filterTrade===-1 || status.filterTrade==v.event) ? <tr key={v.created}>
                                                 <td>
-                                                    <FontAwesomeIcon icon={ TradeAttr[v.event].icon } style={{ marginRight: 10 }} />
-                                                    {TradeAttr[v.event].label}
+                                                    <FontAwesomeIcon icon={ TradeAttrs[v.event].icon } style={{ marginRight: 10 }} />
+                                                    {TradeAttrs[v.event].label}
                                                 </td>
                                                 <td style={{ textAlign: 'right' }}>
                                                     {Number(v.price.toFixed(6))} WETH
@@ -581,7 +606,7 @@ const ViewPage = ({ isDesktop, logged, art, listings, offers, trades, ethPrice, 
                                                 <td style={{ textAlign: 'center' }}>
                                                     {offsetDate(v.created, 0)}
                                                 </td>
-                                            </tr>
+                                            </tr> : null
                                         ))}
                                     </tbody>
                                 </table>
@@ -609,16 +634,8 @@ const ViewPage = ({ isDesktop, logged, art, listings, offers, trades, ethPrice, 
             {art !== null ? (
                 <MakeOffer
                     visible={status.showMakeOffer}
-                    onClose={() =>
-                        setStatus({ ...status, showMakeOffer: false })
-                    }
-                    onUpdate={(data) =>
-                        setStatus({
-                            ...status,
-                            offers: data,
-                            showMakeOffer: false,
-                        })
-                    }
+                    onClose={() => setStatus({ ...status, showMakeOffer: false })}
+                    onUpdate={(data) => setStatus({ ...status, offers: data, showMakeOffer: false })}
                     art={{ ...art, price: auction ? topPrice : status.price }}
                     ethPrice={ethPrice}
                 />
@@ -626,16 +643,8 @@ const ViewPage = ({ isDesktop, logged, art, listings, offers, trades, ethPrice, 
             {art !== null ? (
                 <ListSell
                     visible={status.showListSell}
-                    onClose={() =>
-                        setStatus({ ...status, showListSell: false })
-                    }
-                    onUpdate={(data) =>
-                        setStatus({
-                            ...status,
-                            listings: data,
-                            showListSell: false,
-                        })
-                    }
+                    onClose={() => setStatus({ ...status, showListSell: false }) }
+                    onUpdate={(data) => setStatus({ ...status, listings: data, showListSell: false, }) }
                     art={{ ...art }}
                     balance={myOwn}
                     ethPrice={ethPrice}
@@ -644,16 +653,8 @@ const ViewPage = ({ isDesktop, logged, art, listings, offers, trades, ethPrice, 
             {art !== null ? (
                 <CheckoutSell
                     visible={status.showCheckoutSell}
-                    onClose={() =>
-                        setStatus({ ...status, showCheckoutSell: false })
-                    }
-                    onUpdate={(data) =>
-                        setStatus({
-                            ...status,
-                            offers: data,
-                            showCheckoutSell: false,
-                        })
-                    }
+                    onClose={() => setStatus({ ...status, showCheckoutSell: false })}
+                    onUpdate={(data) => setStatus({ ...status, offers: data, showCheckoutSell: false })}
                     art={{ ...art }}
                     args={status.args}
                     ethPrice={ethPrice}
@@ -671,15 +672,13 @@ export const getServerSideProps = async ({ req, query }: any): Promise<any> => {
     const trades: Array<Trade> = art !== null ? await getTradeHistory(tokenid) : []
     const hodlerCount: number = art !== null ? await getArtHolderCount(tokenid) : 0
 
-    let logged = false,
-        liked = false,
-        myOwn = 0,
-        uid = 0
+    let logged = false, like = 0, myOwn = 0, uid = 0
+
     if (session && session.user) {
         const { id } = session.user
         uid = id
         logged = true
-        liked = await getArtLiked(id, tokenid)
+        like = await getArtLiked(id, tokenid)
         myOwn = await getMyTokens(id, tokenid)
         await setArtViews(id, tokenid)
     }
@@ -694,7 +693,7 @@ export const getServerSideProps = async ({ req, query }: any): Promise<any> => {
             trades,
             ethPrice,
             hodlerCount,
-            liked,
+            like,
             myOwn,
         },
     }

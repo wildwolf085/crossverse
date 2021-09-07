@@ -2,19 +2,32 @@
 @import "../../../common/css/variables";
 
 .profile {
-  .head {
-  }
 
-  .body {
+  table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    line-height: 1.5715;
+    list-style: none;
 
+    th {
+        color: #888;
+        border-bottom: 1px solid #888;
+        .center {
+            text-align: center;
+        }
+        .right {
+            text-align: right;
+        }
+    }
+    td, th {
+        padding: 16px 16px;
+        overflow-wrap: break-word;
+    }
   }
 
   .order {
     margin-top: 66px;
-  }
-
-  .orderList {
-
   }
 
   .title {
@@ -67,7 +80,9 @@
       padding-left: 28px;
     }
 
-    .purchasedRow {
+    .order {
+      margin-top: 50px;
+      margin-bottom: 50px;
     }
 
     .titleWithLink {
@@ -91,7 +106,7 @@
     }
 
     .transaction {
-      margin-top: 24px;
+      margin-top: 50px;
       margin-bottom: 50px;
     }
   }

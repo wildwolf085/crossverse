@@ -13,6 +13,8 @@ import store from '@/store/store'
 import { Provider } from 'react-redux'
 import { Provider as AuthProvider } from 'next-auth/client'
 /* import { UseWalletProvider } from 'use-wallet' */
+import { ToastContainer} from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 dayjs.extend(duration)
 dayjs.extend(relativeTime)
@@ -43,6 +45,7 @@ const CustomApp: FC<AppProps> = ({ Component, pageProps }) => {
 					<Layout>
 						<Component {...pageProps} />
 					</Layout>
+					<ToastContainer />
 			</Provider>
 		</AuthProvider>
 	)

@@ -160,11 +160,11 @@
   line-height: $line-height-en;
 
   &-item {
+    min-width: 130px;
     
     div, a {
       display: flex;
       align-items: center;
-      min-width: 130px;
       font-size: 20px;
       color: #888;
     }
@@ -172,6 +172,15 @@
   &-name {
     font-size: $font-size-xxl;
   }
+  &-cmd {
+    color: rgb(59, 111, 255) !important;
+    cursor: pointer;
+    
+    &:hover {
+      color: rgb(0, 0, 206) !important;
+    }
+  }
+  
 
   &-basic {
     margin: 20px 0;

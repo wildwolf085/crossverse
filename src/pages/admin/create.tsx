@@ -122,92 +122,26 @@ const PostPage = (props: any) => {
 						Publish a new NFT
 					</PageTitle>
 					<Row justify="center">
-						<Form
-							className={`${styles.form} ant-col`}
-							form={form}
-							style={{ flex: '1 1 auto' }}
-							onFinish={onFinish}
-						>
+						<Form className={`${styles.form} ant-col`} form={form} style={{ flex: '1 1 auto' }} onFinish={onFinish}>
 							<b>Store</b>
 							<Form.Item className={styles.formItem}>
-								<Input
-									placeholder="Store"
-									value={DefaultStore}
-									disabled={true}
-								/>
+								<Input placeholder="Store" value={DefaultStore} disabled={true}/>
 							</Form.Item>
 							<b>Token ID</b>
 							<Form.Item className={styles.formItem}>
 								<Input disabled={true} value={availableTokenId} />
 							</Form.Item>
 							<b>Author</b>
-							<Form.Item
-								className={styles.formItem}
-								rules={[
-									{
-										required: true,
-										message: 'Author required',
-									},
-								]}
-							>
-								<Input
-									ref={refAuthor}
-									placeholder="Author"
-									value={status.author || ''}
-									onChange={(e) =>
-										changeStatus({
-											errmsg: null,
-											author: e.target.value,
-										})
-									}
-								/>
+							<Form.Item className={styles.formItem} rules={[{required: true, message: 'Author required'},]}>
+								<Input ref={refAuthor} placeholder="Author" value={status.author || ''} onChange={(e) => changeStatus({errmsg: null, author: e.target.value})}/>
 							</Form.Item>
 							<b>Work Number</b>
-							<Form.Item
-								className={styles.formItem}
-								rules={[
-									{
-										required: true,
-										message: 'Work Number required',
-									},
-								]}
-							>
-								<Input
-									ref={refWorknumber}
-									placeholder="Work Number"
-									type="number"
-									min="0"
-									max="10000"
-									step="1"
-									value={status.worknumber || 0}
-									onChange={(e) =>
-										changeStatus({
-											errmsg: null,
-											worknumber: e.target.value,
-										})
-									}
-								/>
+							<Form.Item className={styles.formItem} rules={[{required: true, message: 'Work Number required'},]}>
+								<Input ref={refWorknumber} placeholder="Work Number" type="number" min="0" max="10000" step="1" value={status.worknumber || 0} onChange={(e) => changeStatus({ errmsg: null, worknumber: e.target.value })}/>
 							</Form.Item>
 							<b>Category</b>
-							<Form.Item
-								className={styles.formItem}
-								rules={[
-									{
-										required: true,
-										message: 'Category required',
-									}
-								]}
-							>
-								<select
-									ref={refCategory}
-									value={status.category}
-									onChange={(e) =>
-										changeStatus({
-											errmsg: null,
-											category: Number(e.target.value),
-										})
-									}
-								>
+							<Form.Item className={styles.formItem} rules={[{required: true, message: 'Category required'}]}>
+								<select ref={refCategory} value={status.category} onChange={(e) => changeStatus({errmsg: null, category: Number(e.target.value)})}>
 									<option value="0">- Select category -</option>
 									{Category.map((v) => v.value!==0 && (
 										<option key={v.value} value={v.value}>
@@ -217,148 +151,44 @@ const PostPage = (props: any) => {
 								</select>
 							</Form.Item>
 							<b>Name</b>
-							<Form.Item
-								className={styles.formItem}
-								rules={[
-									{
-										required: true,
-										message: 'Name required',
-									},
-								]}
-							>
-								<Input
-									ref={refName}
-									placeholder="Name"
-									value={status.name || ''}
-									onChange={(e) =>
-										changeStatus({
-											errmsg: null,
-											name: e.target.value,
-										})
-									}
-								/>
+							<Form.Item className={styles.formItem} rules={[{required: true, message: 'Name required'},]}>
+								<Input ref={refName} placeholder="Name" value={status.name || ''} onChange={(e) => changeStatus({errmsg: null, name: e.target.value})}/>
 							</Form.Item>
 							<b>Description</b>
-							<Form.Item
-								className={styles.formItem}
-								rules={[
-									{
-										required: true,
-										message: 'Description required',
-									},
-								]}
-							>
-								<Input.TextArea
-									ref={refDescription}
-									placeholder="Description"
-									value={status.description || ''}
-									onChange={(e) =>
-										changeStatus({
-											errmsg: null,
-											description: e.target.value,
-										})
-									}
-								/>
+							<Form.Item className={styles.formItem} rules={[{required: true, message: 'Description required'},]}>
+								<Input.TextArea ref={refDescription} placeholder="Description" value={status.description || ''} onChange={(e) => changeStatus({errmsg: null, description: e.target.value})}/>
 							</Form.Item>
 							
 							<b>Supportted Format: JPG, PNG, GIF, MP3, MP4: Less than 20MB</b>
-							<Form.Item
-								className={styles.formItem}
-								rules={[
-									{
-										required: true,
-										message: 'File required',
-									},
-								]}
-							>
-								<Upload
-									/* listType="picture" */
-									action="/api/admin/upload"
-									maxCount={1}
-									fileList={status.fileList}
-									onChange={onFileChange}
-									/* previewFile={onFilePreview} */
-								>
+							<Form.Item className={styles.formItem} rules={[{required: true, message: 'File required'},]}>
+								<Upload action="/api/admin/upload" maxCount={1} fileList={status.fileList} onChange={onFileChange} >
 									<Button icon={<UploadOutlined />}>Upload File</Button>
 								</Upload>
 							</Form.Item>
 
 							<b>Thumbnail (supportted Format: JPG, PNG: Less than 1MB)</b>
 							<div style={{marginBottom:20}}>
-							<Checkbox
-								checked={status.autothumbnail}
-								onChange={(e) =>
-									changeStatus({
-										errmsg: null,
-										autothumbnail: e.target.checked,
-									})
-								}
-							>
+							<Checkbox checked={status.autothumbnail} onChange={(e) => changeStatus({errmsg: null, autothumbnail: e.target.checked})}>
 								Automatically generate a thumbnail image.
 							</Checkbox>
 							</div>
 							{status.autothumbnail ? null : (
-								<Form.Item
-									className={styles.formItem}
-									rules={[
-										{
-											required: true,
-											message: 'File required',
-										},
-									]}
-								>
-									<Upload
-										listType="picture"
-										action="/api/admin/upload"
-										maxCount={1}
-										fileList={status.thumbnail}
-										onChange={onThumbnailChange}
-									>
+								<Form.Item className={styles.formItem} rules={[{required: true, message: 'File required'},]}>
+									<Upload listType="picture" action="/api/admin/upload" maxCount={1} fileList={status.thumbnail} onChange={onThumbnailChange}>
 										<Button icon={<UploadOutlined />}>Upload thumbnail</Button>
 									</Upload>
 								</Form.Item>
 							)}
 							
 							<div style={{marginBottom:20}}>
-								<Checkbox
-									checked={status.auction}
-									onChange={(e) =>
-										changeStatus({
-											errmsg: null,
-											auction: e.target.checked,
-										})
-									}
-								>
+								<Checkbox checked={status.auction} onChange={(e) => changeStatus({errmsg: null, auction: e.target.checked})}>
 									Highest Bid (Auction to the highest bidder)
 								</Checkbox>
 							</div>
 							<b>{status.auction ? 'Minimum Bid' : 'Price'} (ETH)</b>
 							<div style={{ display: 'flex' }}>
-								<Form.Item
-									className={styles.formItem}
-									style={{ width: 150 }}
-									rules={[
-										{
-											required: true,
-											message: 'Price required',
-										},
-									]}
-								>
-									<Input
-										ref={refPrice}
-										placeholder="Price"
-										type="number"
-										min="0.001"
-										max="1000"
-										step="0.0001"
-										value={status.price || ''}
-										onChange={(e) =>
-											changeStatus({
-												errmsg: null,
-												price: e.target.value,
-											})
-										}
-									/>
+								<Form.Item className={styles.formItem} style={{ width: 150 }} rules={[{required: true, message: 'Price required'},]}>
+									<Input ref={refPrice} placeholder="Price" type="number" min={0.001} max={1000} step={0.0001} value={status.price || ''} onChange={(e) => changeStatus({errmsg: null, price: e.target.value})}/>
 								</Form.Item>
 								<div style={{ padding: '8px 0 0 20px' }}>
 									{status.price
@@ -370,71 +200,18 @@ const PostPage = (props: any) => {
 							{status.auction ? (
 								<>
 									<b>Expiration Date</b>
-									<Form.Item
-										className={styles.formItem}
-										rules={[
-											{
-												required: true,
-												message: 'Last Time required',
-											},
-										]}
-									>
-										<Input
-											type="datetime-local"
-											ref={refAuctionTime}
-											placeholder="Last Time"
-											value={status.auctiontime}
-											min={new Date((now() + 86400 * 1) *1000).toISOString().slice(0,16)}
-											max={new Date((now() + 86400 * 31) *1000).toISOString().slice(0,16)}
-											onChange={(e) =>
-												changeStatus({
-													errmsg: null,
-													auctiontime: e.target.value,
-												})
-											}
-										/>
+									<Form.Item className={styles.formItem} rules={[{required: true, message: 'Last Time required'},]}>
+										<Input type="datetime-local" ref={refAuctionTime} placeholder="Last Time" value={status.auctiontime} min={new Date((now() + 86400 * 1) *1000).toISOString().slice(0,16)} max={new Date((now() + 86400 * 31) *1000).toISOString().slice(0,16)} onChange={(e) => changeStatus({errmsg: null, auctiontime: e.target.value})}/>
 									</Form.Item>
 									<div>Your auction will automatically end at this time and the highest bidder will win. No need to cancel it!</div>
 								</>
 							) : null}
-							
-
 							<b>in stock</b>
-							<Form.Item
-								className={styles.formItem}
-								rules={[
-									{
-										required: true,
-										message: 'Stock required',
-									},
-								]}
-							>
-								<Input
-									ref={refBalance}
-									placeholder="Maximum saleable"
-									type="number"
-									min="1"
-									max="10000"
-									step="1"
-									value={status.balance || ''}
-									onChange={(e) =>
-										changeStatus({
-											errmsg: null,
-											balance: e.target.value,
-										})
-									}
-								/>
+							<Form.Item className={styles.formItem} rules={[{required: true, message: 'Stock required'},]}>
+								<Input ref={refBalance} placeholder="Maximum saleable" type="number" min={1} max={10000} step={1} value={status.balance || ''} onChange={(e) => changeStatus({errmsg: null, balance: e.target.value})}/>
 							</Form.Item>
 							<Form.Item className={styles.formItem}>
-								<Checkbox
-									checked={status.physical}
-									onChange={(e) =>
-										changeStatus({
-											errmsg: null,
-											physical: e.target.checked,
-										})
-									}
-								>
+								<Checkbox checked={status.physical} onChange={(e) => changeStatus({ errmsg: null, physical: e.target.checked })}>
 									Physical
 								</Checkbox>
 							</Form.Item>

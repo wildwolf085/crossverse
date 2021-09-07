@@ -110,46 +110,15 @@ const TransferDialog = ({ visible, art, onClose }: TransferDialogProps) => {
             onOk={onSubmit}
             onCancel={onCancel}
             footer={[
-                <Button
-                    key="connect"
-                    type="primary"
-                    loading={wallet.connecting}
-                    onClick={wallet.connect}
-                    style={{
-                        fontSize: 'large',
-                        padding: '10px 30px',
-                        height: 'auto',
-                        display: wallet.connected ? 'none' : '',
-                    }}
-                >
+                <Button key="connect" type="primary" loading={wallet.connecting} onClick={wallet.connect} style={{ fontSize: 'large', padding: '10px 30px', height: 'auto', display: wallet.connected ? 'none' : '' }}>
                     Connect Wallet
                 </Button>,
-                <Button
-                    key="submit"
-                    disabled={wallet.balance === 0}
-                    type="primary"
-                    loading={status.loading || wallet.checkingBalance}
-                    onClick={onSubmit}
-                    style={{
-                        fontSize: 'large',
-                        padding: '10px 30px',
-                        height: 'auto',
-                        display: !wallet.connected ? 'none' : '',
-                    }}
-                >
+                <Button key="submit" disabled={wallet.balance === 0} type="primary" loading={status.loading || wallet.checkingBalance} onClick={onSubmit} style={{ fontSize: 'large', padding: '10px 30px', height: 'auto', display: !wallet.connected ? 'none' : '', }}>
                     SUBMIT
                 </Button>,
-                <Button
-                    key="back"
-                    onClick={onCancel}
-                    style={{
-                        fontSize: 'large',
-                        padding: '10px 30px',
-                        height: 'auto',
-                    }}
-                >
+                <Button key="back" onClick={onCancel} style={{ fontSize: 'large', padding: '10px 30px', height: 'auto', }} >
                     CANCEL
-                </Button>,
+                </Button>
             ]}
         >
             <h2>
@@ -170,39 +139,12 @@ const TransferDialog = ({ visible, art, onClose }: TransferDialogProps) => {
                 <div style={{ flexGrow: 1, paddingLeft: 20 }}>
                     <b>Target Address</b>
                     <div>
-                        <Input
-                            ref={refAddress}
-                            value={status.to}
-                            minLength={44}
-                            maxLength={44}
-                            onChange={(e) =>
-                                setStatus({
-                                    ...status,
-                                    toErr: '',
-                                    to: e.target.value.trim(),
-                                })
-                            }
-                        />
+                        <Input ref={refAddress} value={status.to} minLength={44} maxLength={44} onChange={(e) => setStatus({ ...status, toErr: '', to: e.target.value.trim(), }) }/>
                     </div>
                     <div style={{ color: 'red' }}>{status.toErr}</div>
                     <b>Quantity</b>
                     <div>
-                        <Input
-                            type="number"
-                            value={status.quantity}
-                            min={1}
-                            max={wallet.balance}
-                            step={1}
-                            onChange={(e) =>
-                                setStatus({
-                                    ...status,
-                                    quantity: Math.min(
-                                        wallet.balance,
-                                        Number(e.target.value)
-                                    ),
-                                })
-                            }
-                        />
+                        <Input type="number" value={status.quantity} min={1} max={wallet.balance} step={1} onChange={(e) => setStatus({ ...status, quantity: Math.min( wallet.balance, Number(e.target.value) ) }) } />
                     </div>
                 </div>
             </div>
@@ -216,18 +158,8 @@ const TransferDialog = ({ visible, art, onClose }: TransferDialogProps) => {
                             checking balance...
                         </span>
                     ) : (
-                        <span
-                            style={{
-                                color:
-                                    wallet.balance < status.quantity
-                                        ? 'red'
-                                        : '',
-                            }}
-                        >
-                            {wallet.balance +
-                                (wallet.balance < status.quantity
-                                    ? ' (Insufficient tokens in wallet)'
-                                    : '')}
+                        <span style={{ color: wallet.balance < status.quantity ? 'red' : '' }}>
+                            {wallet.balance + (wallet.balance < status.quantity ? ' (Insufficient tokens in wallet)' : '')}
                         </span>
                     )
                 ) : (
@@ -238,14 +170,8 @@ const TransferDialog = ({ visible, art, onClose }: TransferDialogProps) => {
             {status.tx ? (
                 <h2 style={{ textAlign: 'center' }}>
                     tx:
-                    <a
-                        href={explorer('tx', status.tx.txid)}
-                        target="_blank"
-                        style={{ marginRight: 20 }}
-                    >
-                        {status.tx.txid.slice(0, 6) +
-                            '...' +
-                            status.tx.txid.slice(-4)}
+                    <a href={explorer('tx', status.tx.txid)} target="_blank" style={{ marginRight: 20 }} >
+                        {status.tx.txid.slice(0, 6) + '...' + status.tx.txid.slice(-4)}
                     </a>
                     {status.success ? (
                         <span style={{ color: 'green' }}>Success</span>

@@ -10,7 +10,7 @@ import styles from './index.module.scss'
 import { getPurchased, getETHPrice } from '@/utils/datamodel'
 import { call } from '@/utils/helper'
 import { getViewURL } from '@/utils/helper'
-import TransferDialog from '../components/TransferDialog'
+import TransferDialog from '@/components/Dialogs/TransferDialog'
 
 import useWallet from '@/utils/useWallet'
 /* import Connector from '@/connector' */
@@ -36,6 +36,7 @@ const MyPurchasedPage = ({ data, ethPrice }: MyPurchasedProps) => {
 		checked: false,
 		data,
 	})
+	
 	const wallet = useWallet(false);
 	const address = wallet.address.toLowerCase();
 

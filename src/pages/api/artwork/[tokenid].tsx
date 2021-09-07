@@ -45,6 +45,9 @@ export default async ( req: NextApiRequest, res: NextApiResponse<ApiResponse> ):
                         }
                     } else {
                         const row = await getNftById(pid)
+                        if (row?.ownerid===id) {
+                            return res.json({ status: 'err', msg: 'You cannot buy or sell yours.' })
+                        }
                         priceETH = row?.sellPrice || v.price
                         seller = row?.ownerAddress || NullAddress
                         if (count > (row?.balance || 0)) {
@@ -73,6 +76,9 @@ export default async ( req: NextApiRequest, res: NextApiResponse<ApiResponse> ):
                     const { seller, pid, count, sellPrice } = req.body
                     const offer = await getOfferById(pid)
                     if (offer !== null) {
+                        if (offer.ownerid===id) {
+                            return res.json({ status: 'err', msg: 'You cannot buy or sell yours.' })
+                        }
                         const price = Math.round(offer.price * 1e18)
                         const priceHex = toHex(price)
                         const quantity = toHex(count)
@@ -125,13 +131,23 @@ export default async ( req: NextApiRequest, res: NextApiResponse<ApiResponse> ):
                 } else if (action === 'check') {
                     await checktxs()
                     return res.json({ status: 'ok' })
-                } else if (action === 'like') {
-                    const result = await setArtLiked(id, tokenid)
-                    if (result) {
-                        return res.json({ status: 'ok' })
+                } else if (action === 'like' || action === 'dislike') {
+                    const msg = await setArtLiked(id, tokenid, action === 'like' ? 1 : -1)
+                    let err = '';
+                    if (msg) {
+                        if (msg===1) {
+                            err = 'You have already selected [Like]'
+                        } else if (msg===-1) {
+                            err = 'You have already selected [Dislike]'
+                        } else if (msg===0) {
+                            err = 'unknown error'
+                        } else {
+                            return res.json({ status: 'ok', msg })
+                        }
                     } else {
-                        return res.json({ status: 'err', msg: 'You already add to favorites', })
+                        err = 'unknown error'
                     }
+                    return res.json({ status: 'err', msg:err })
                 } else if (action === 'list') {
                     const { tx, list } = req.body
                     await addlist( tokenid, id, list.address, list.price, list.quantity )

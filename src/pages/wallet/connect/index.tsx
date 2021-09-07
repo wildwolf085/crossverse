@@ -6,7 +6,7 @@ import styles from './index.module.scss'
 import useWallet from '@/utils/useWallet'
 
 const PAGE_NAME = 'Get Wallet'
-const tools = [
+/* const tools = [
     {
         key: 'coinbase',
         icon: 'walletlink.webp',
@@ -27,7 +27,7 @@ const tools = [
         key: 'arkane',
         icon: 'arkane.svg',
     },
-]
+] */
 
 const WalletConnectPage = (): JSX.Element => {
     const wallet = useWallet(true)
@@ -65,7 +65,8 @@ const WalletConnectPage = (): JSX.Element => {
                         </>
                     )}
                 </div>
-                <div className={styles.others}>
+
+                {/* <div className={styles.others}>
                     <PageTitle className={styles.title} fontWeight="Medium">
                         Other Wallets
                     </PageTitle>
@@ -76,7 +77,7 @@ const WalletConnectPage = (): JSX.Element => {
                             </div>
                         ))}
                     </div>
-                </div>
+                </div> */}
             </div>
         </Page>
     )

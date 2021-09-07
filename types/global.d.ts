@@ -124,6 +124,7 @@ declare interface Artwork {
 	volume: number
 	views: number
 	likes: number
+	dislikes: number
 	drop: boolean
 	pinned: boolean
 	created: number
@@ -162,6 +163,7 @@ declare interface Offer {
 	created:number
 }
 declare interface OfferWithArt {
+	ownerid:number
 	txid:string
 	art: Artview
 	from: string

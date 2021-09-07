@@ -1,5 +1,37 @@
 import * as crypto from 'crypto'
 import dayjs from 'dayjs'
+import { toast } from 'react-toastify';
+
+export const copyToClipboard = (text:string) => {
+	var textField = document.createElement('textarea')
+	textField.innerText = text
+	document.body.appendChild(textField)
+	textField.select()
+	document.execCommand('copy')
+	textField.remove()
+	toast(`Copied 【${text}】`, {
+		position: "top-right",
+		autoClose: 1000
+	});
+};
+export const showTips = (text:string) => {
+	toast(text, {
+		position: "top-right",
+		autoClose: 2000,
+		/* hideProgressBar: false, */
+		/* closeOnClick: true,
+		pauseOnHover: true, */
+		/* draggable: true, */
+		/* progress: undefined, */
+	});
+};
+
+export const getQueryVariable = (name:string) =>{
+	const search = window.location.search;
+	const params = new URLSearchParams(search);
+	return params.get(name);
+}
+export const getDomain = () =>window.location.origin;
 
 export const hash = (message: string): string => {
 	const buf = new TextEncoder().encode(message)
@@ -31,12 +63,7 @@ export const formatTime = (time: number, offset = 8): string => {
 	const mm = date.getUTCMinutes()
 	const ss = date.getUTCSeconds()
 	const dt = ('0' + m).slice(-2) + '-' + ('0' + d).slice(-2)
-	const tt =
-		('0' + hh).slice(-2) +
-		':' +
-		('0' + mm).slice(-2) +
-		':' +
-		('0' + ss).slice(-2)
+	const tt = ('0' + hh).slice(-2) + ':' + ('0' + mm).slice(-2) + ':' + ('0' + ss).slice(-2)
 	return y + '-' + dt + ' ' + tt
 }
 export const call = async (url: string, json: any): Promise<any> => {

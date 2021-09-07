@@ -12,8 +12,10 @@ import { getNftList, getETHPrice } from '@/utils/datamodel'
 import Category from '@/config/category.json'
 import OrderBy from '@/config/orderby.json'
 import styles from './index.module.scss'
-import { getViewURL } from '@/utils/helper'
+import { getDomain, getViewURL } from '@/utils/helper'
 import Link from 'next/link'
+import { getQueryVariable } from '@/utils/helper'
+import ShareBox from '@/components/Dialogs/ShareBox'
 
 const PAGE_NAME = 'Marketplace'
 
@@ -25,19 +27,37 @@ interface MarketPlacePageProp {
 interface MarketPlaceStatus {
 	category: number
 	orderBy: number
+    query:string
+	domain: string
+    shareUrl:string
 }
 
 const MarketPlacePage = ({ isDesktop, data, ethPrice }: MarketPlacePageProp) => {
 	const [status, setStatus] = useState<MarketPlaceStatus>({
 		category: 0,
-		orderBy: 10
+		orderBy: 10,
+		query: '',
+		domain: '',
+		shareUrl:''
 	})
 	const dataSource:Array<Artwork> = [];
 	for(let v of data) {
+		if (status.query && v.title.indexOf(status.query)===-1) continue;
 		if (status.category===0 || v.category===status.category) {
 			dataSource.push(v);
 		}
 	}
+	
+    React.useEffect(()=>{
+		const domain = getDomain()
+        const query = getQueryVariable('q');
+        if (query) {
+            setStatus({...status, query, domain})
+        } else {
+			setStatus({...status, domain})
+		}
+    }, [])
+
 	dataSource.sort((a,b)=>{
 		switch(status.orderBy) {
 		case 10: // Recently Listed
@@ -60,7 +80,7 @@ const MarketPlacePage = ({ isDesktop, data, ethPrice }: MarketPlacePageProp) => 
 
 	const onCategory = (category: number) => setStatus({...status, category})
 	const onOrderBy = (orderBy: number) => setStatus({...status, orderBy})
-
+	const onShare = (url:string) => setStatus({...status, shareUrl:status.domain+'/'+url})
 	return (
 		<Page className={styles.market} title={getPageName(PAGE_NAME)}>
 			<div className={styles.head}>
@@ -105,7 +125,7 @@ const MarketPlacePage = ({ isDesktop, data, ethPrice }: MarketPlacePageProp) => 
 												Collect
 											</Button>
 										</Link>
-										<Button block wrapClassName={styles.btn} type="primary">
+										<Button onClick={()=>onShare(getViewURL(item.id))} block wrapClassName={styles.btn} type="primary">
 											Share
 										</Button>
 									</>
@@ -115,6 +135,9 @@ const MarketPlacePage = ({ isDesktop, data, ethPrice }: MarketPlacePageProp) => 
 					))}
 				</Row>
 			</div>
+			<ShareBox onClose={()=> setStatus({...status,shareUrl:''})} url={status.shareUrl} visible={status.shareUrl!==''}>
+
+			</ShareBox>
 		</Page>
 	)
 }
