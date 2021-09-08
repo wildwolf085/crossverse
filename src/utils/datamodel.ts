@@ -687,7 +687,7 @@ export const updateNewNFT = async ({ tokenid, store, author, worknumber, categor
 			row = await Arts.findOne(tokenid)
 			/* const url = 'https://storage.googleapis.com/crossverse/' */
 			const old = row ? artwork(row) : null
-			const isUpdate = old !== undefined
+			const isUpdate = old !== null
 			const created = now()
 			const key = hash(String(tokenid))
 			const price = fromEther(priceEth)
