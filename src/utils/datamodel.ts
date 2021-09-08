@@ -1328,7 +1328,11 @@ export const setMyWallet = async ( uid: number, address: string ): Promise<strin
 		if (!isValid) return '❌ invalid address format'
 		if (!users[uid]) return '❌ unregistered user'
 		const row = await Wallets.findOne(address)
-		if (row) return `🦊 [${ address.slice(0, 6) + '...' + address.slice(-4) }] already in use by someone`
+		
+		if (row) {
+			if (row.uid===uid) return null
+			return `🦊 [${ address.slice(0, 6) + '...' + address.slice(-4) }] already in use by someone`
+		}
 		await Wallets.insert({ key: address, uid })
 		/* wallets[address] = uid */
 		return null
