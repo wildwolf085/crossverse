@@ -870,10 +870,7 @@ export const getArtHolderCount = async (id: number): Promise<number> => {
 	try {
 		const art = await getArt(id)
 		if (art) {
-			return await Nfts.count('DISTINCTROW `uid`', {
-				tokenid: id,
-				balance: { $ne: 0 },
-			})
+			return await Nfts.count('DISTINCTROW `uid`', {tokenid: id, balance: { $ne: 0 }})
 		}
 	} catch (err:any) {
 		setlog(err)
@@ -1086,7 +1083,7 @@ export const getCampaign = async (): Promise<Campaigns> => {
 export const getDrops = async (): Promise<Array<Artwork>> => {
 	try {
 		await initialize()
-		return getArts('drop')
+		return await getArts('drop')
 	} catch (err:any) {
 		setlog(err)
 	}
@@ -1095,7 +1092,7 @@ export const getDrops = async (): Promise<Array<Artwork>> => {
 export const getRecommended = async (): Promise<Array<Artwork>> => {
 	try {
 		await initialize()
-		return getArts('pinned')
+		return await getArts('pinned')
 	} catch (err:any) {
 		setlog(err)
 	}
@@ -1105,7 +1102,7 @@ export const getRecommended = async (): Promise<Array<Artwork>> => {
 export const getNftList = async (): Promise<Array<Artwork>> => {
 	try {
 		await initialize()
-		return getArts('all')
+		return await getArts('all')
 	} catch (err:any) {
 		setlog(err)
 	}

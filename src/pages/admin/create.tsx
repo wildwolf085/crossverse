@@ -285,7 +285,7 @@ const PostPage = ({ availableTokenId, campaign, ethPrice }: PostPageProp) => {
 	)
 }
 export async function getServerSideProps() {
-	const availableTokenId = getAvailableTokenId()
+	const availableTokenId = await getAvailableTokenId()
 	const ethPrice = await getETHPrice()
 	const campaign = await getCampaign()
 	return {
