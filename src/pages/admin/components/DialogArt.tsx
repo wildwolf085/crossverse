@@ -3,7 +3,7 @@ import { Modal, Form, Upload, Button, Input, Checkbox } from 'antd'
 import { UploadOutlined } from '@ant-design/icons'
 
 import Category from '@/config/category.json'
-import { call, fromLocalTime, getLocalTime} from '@/utils/helper'
+import { call, getLocalTime} from '@/utils/helper'
 import styles from './DialogArt.module.scss'
 
 export interface DialogArtProps {
@@ -47,7 +47,7 @@ const DialogArt: React.FC<DialogArtProps> = ({id, d, campaign, onClose, onUpdate
 		physical: !!d?.physical,
 		price: d?.price || 0,
 		auction: !!d?.auction,
-		auctiontime: campaign.lasttime, //d?.auctiontime || 0,
+		auctiontime: campaign?.lasttime || 0, //d?.auctiontime || 0,
 		totalsupply: d?.totalsupply || 0,
 		instock: d?.instock || 0,
 		volume: d?.volume || 0,

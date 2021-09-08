@@ -7,7 +7,7 @@ import Page from '@/components/Page'
 import PageTitle from '@/components/Page/Title'
 import styles from './create.module.scss'
 
-import { call, fromLocalTime, getLocalTime, now } from '@/utils/helper'
+import { call, fromLocalTime, getLocalTime } from '@/utils/helper'
 import { getCampaign } from '@/utils/datamodel'
 
 const PAGE_NAME = 'Update drop campaign'
