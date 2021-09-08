@@ -78,19 +78,20 @@ const initialize = async (): Promise<any> => {
 	if (!global.inited) {
 		global.inited = true
 		global.users = {}
-		global.alias = {}
+		/* global.alias = {}
 		global.wallets = {}
 		global.arts = {}
 		global.lastTokenId = 0
-		global.lastCheckTime = 0
+		global.lastCheckTime = 0 */
 		let rows: any = await Users.find({ alias: { $ne: null } })
 		if (rows) {
 			for (const v of rows) {
-				updateGlobalUser({ id: v.id, alias: v.alias || '', about: v.about || '', })
+				const user:User = {id: v.id, alias: v.alias || '', about: v.about || ''}
+				global.users[v.id] = user
 			}
 		}
 
-		rows = await Wallets.find({})
+		/* rows = await Wallets.find({})
 		if (rows) {
 			for (const v of rows) {
 				global.wallets[v.key] = v.uid
@@ -103,7 +104,7 @@ const initialize = async (): Promise<any> => {
 				global.arts[v.id] = artwork(v)
 				if (global.lastTokenId < v.id) global.lastTokenId = v.id
 			}
-		}
+		} */
 	}
 }
 
@@ -151,9 +152,9 @@ const artwork = (v: any): Artwork => {
 }
 
 const updateGlobalUser = (data: User): void => {
-	const v: any = global.users[data.id]
-	if (v && global.alias[v.alias] !== undefined) delete global.alias[v.alias]
-	if (data.alias !== '') global.alias[data.alias] = data.id
+	/* const v: any = global.users[data.id] */
+	/* if (v && global.alias[v.alias] !== undefined) delete global.alias[v.alias]
+	if (data.alias !== '') global.alias[data.alias] = data.id */
 	global.users[data.id] = data
 }
 
@@ -189,17 +190,21 @@ const uploadToGCP = (filename: string, buffer: any) => {
 	})
 }
 
-const getArts = (type: 'drop' | 'pinned' | 'all'): Array<Artwork> => {
-	const arts: any = global.arts
+const getArts = async (type: 'drop' | 'pinned' | 'all'): Promise<Array<Artwork>> => {
+	const where:ModelWhere = {};
+	if (type === 'all') {
+		where.drop = 0
+	} else if (type === 'drop') {
+		where.drop = 1
+	} else if (type === 'pinned') {
+		where.drop = 0
+		where.pinned = 1
+	}
 	const result: Array<Artwork> = []
-	for (const id in arts) {
-		const v = <Artwork>arts[id]
-		if (type === 'all' && !v.drop) {
-			result.push(v)
-		} else if (type === 'drop' && v.drop) {
-			result.push(v)
-		} else if (type === 'pinned' && v.pinned) {
-			result.push(v)
+	const rows = await Arts.find(where)
+	if (rows) {
+		for (const v of rows) {
+			result.push(artwork(v))
 		}
 	}
 	return result
@@ -207,8 +212,8 @@ const getArts = (type: 'drop' | 'pinned' | 'all'): Array<Artwork> => {
 
 export const validateAddress = (address: string) => web3.utils.isAddress(address)
 
-export const getAvailableTokenId = (): number => {
-	let tokenid = global.lastTokenId
+export const getAvailableTokenId = async ():Promise<number> => {
+	let tokenid = await Arts.max('tokenid')
 	if (tokenid < 1e8) tokenid = 1e8
 	tokenid += Math.round(Math.random() * 100)
 	return tokenid + 1
@@ -345,7 +350,7 @@ export const checktxs = async (): Promise<boolean> => {
 												const buyer = v.args.buyer
 												const seller = v.args.seller === NullAddress ? null : v.args.seller
 												const pid = v.args.pid
-												await buy( tx.uid, global.arts[tokenid], price, quantity, buyer, seller, pid, created )
+												await buy( tx.uid, tokenid, price, quantity, buyer, seller, pid, created )
 											} else if ( v.name === 'TransferSingle' ) {
 												const from = v.args.from
 												const to = v.args.to
@@ -398,59 +403,65 @@ export const checktxs = async (): Promise<boolean> => {
 	return false
 }
 
-const buy = async ( uid: number, art: Artwork, price: number, quantity: number, buyer: string, seller: string, pid: string, created: number ): Promise<void> => {
+const buy = async ( uid: number, tokenid:number, price: number, quantity: number, buyer: string, seller: string, pid: string, created: number ): Promise<void> => {
 	try {
-		let sellerid = 0
-		if (pid.length === 66) {
-			const row = await Offers.findOne(pid)
-			if (row.quantity > quantity) {
-				await Offers.update(pid, { quantity: row.quantity - quantity, amount: (row.quantity - quantity) * row.price })
-			} else {
-				await Offers.update(pid, { quantity: 0, amount: 0, status: 100 })
-			}
-			sellerid = uid
-			uid = row.uid
-			pid = '0'
-		}
-		if (seller === null) {
-			if (art.instock > quantity) {
-				art.instock -= quantity
-			} else {
-				art.instock = 0
-			}
-			await Arts.update(art.id, { instock: art.instock })
-		} else {
-			const row = await Nfts.findOne( pid === '0' ? { tokenid: art.id, uid: sellerid, buyer: seller } : Number(pid) )
-			if (row) {
-				const data: any = { updated: created }
-				data.balance = row.balance - quantity
-				if (data.balance <= 0) {
-					data.balance = 0
-					data.status = 0
-					data.listed = 0
+		const row = await Arts.findOne(tokenid);
+		if (row) {
+			const art: Artwork = artwork(row)
+			let sellerid = 0
+			if (pid.length === 66) {
+				const row = await Offers.findOne(pid)
+				if (row.quantity > quantity) {
+					await Offers.update(pid, { quantity: row.quantity - quantity, amount: (row.quantity - quantity) * row.price })
+				} else {
+					await Offers.update(pid, { quantity: 0, amount: 0, status: 100 })
 				}
-
-				if (row.sellbalance) {
-					data.sellbalance = row.sellbalance - quantity
-					if (data.sellbalance <= 0) {
-						data.sellprice = 0
-						data.sellbalance = 0
+				sellerid = uid
+				uid = row.uid
+				pid = '0'
+			}
+			if (seller === null) {
+				if (art.instock > quantity) {
+					art.instock -= quantity
+				} else {
+					art.instock = 0
+				}
+				await Arts.update(art.id, { instock: art.instock })
+			} else {
+				const row = await Nfts.findOne( pid === '0' ? { tokenid: art.id, uid: sellerid, buyer: seller } : Number(pid) )
+				if (row) {
+					const data: any = { updated: created }
+					data.balance = row.balance - quantity
+					if (data.balance <= 0) {
+						data.balance = 0
 						data.status = 0
 						data.listed = 0
 					}
+	
+					if (row.sellbalance) {
+						data.sellbalance = row.sellbalance - quantity
+						if (data.sellbalance <= 0) {
+							data.sellprice = 0
+							data.sellbalance = 0
+							data.status = 0
+							data.listed = 0
+						}
+					}
+					await Nfts.update(row.id, data)
 				}
-				await Nfts.update(row.id, data)
 			}
-		}
-		const cur = await Nfts.findOne({ uid, buyer, tokenid: art.id })
-		if (cur) {
-			await Nfts.update(cur.id, { balance: cur.balance + quantity, price, updated: created })
+			const cur = await Nfts.findOne({ uid, buyer, tokenid: art.id })
+			if (cur) {
+				await Nfts.update(cur.id, { balance: cur.balance + quantity, price, updated: created })
+			} else {
+				await Nfts.insert({ tokenid: art.id, uid, price, balance: quantity, buyer, seller, created })
+			}
+			await Trades.insert({ uid, tokenid: art.id, event: 1, price, quantity, from: sellerid, to: uid, created })
+			art.volume += (price * quantity) / 1e6
+			await Arts.update(art.id, { volume: { $ad: price * quantity } })
 		} else {
-			await Nfts.insert({ tokenid: art.id, uid, price, balance: quantity, buyer, seller, created })
+			setlog('undefined tokenid [' + tokenid + ']')	
 		}
-		await Trades.insert({ uid, tokenid: art.id, event: 1, price, quantity, from: sellerid, to: uid, created })
-		art.volume += (price * quantity) / 1e6
-		await Arts.update(art.id, { volume: { $ad: price * quantity } })
 	} catch (err:any) {
 		setlog(err)
 	}
@@ -458,7 +469,7 @@ const buy = async ( uid: number, art: Artwork, price: number, quantity: number, 
 
 const transfer = async ( from: string, to: string, tokenid: number, quantity: number, created: number ): Promise<void> => {
 	try {
-		const { wallets } = global
+		/* const { wallets } = global */
 		let senderid = 0, receiverid = 0, senderPrice = 0
 		const sender = await Nfts.findOne({ tokenid, buyer: from })
 		if (sender) {
@@ -489,7 +500,8 @@ const transfer = async ( from: string, to: string, tokenid: number, quantity: nu
 			await Nfts.update(receiver.id, { balance: receiver.balance + quantity, updated: created })
 			receiverid = 0
 		} else {
-			receiverid = wallets[to] || wallets[to.toLowerCase()] || 0
+			const w = await Wallets.findOne(to)
+			receiverid = w ? w.uid : 0
 			await Nfts.insert({ tokenid, uid: receiverid, price: senderPrice, balance: quantity, buyer: to, seller: from, created })
 		}
 		await Trades.insert({ uid: senderid, tokenid, event: 2, price: senderPrice, quantity, from: senderid, to: receiverid, created })
@@ -667,11 +679,14 @@ export const register = async ( alias: string, email: string, password: string, 
 export const updateNewNFT = async ({ tokenid, store, author, worknumber, category, name, description, priceEth, balance, auction, auctiontime, physical, file, thumbnail }: CreateNFTParams): Promise<ApiResponse> => {
 	try {
 		await initialize()
-		const { arts } = global
-		const uid = global.alias[author]
-		if (uid) {
+		let row = await Users.findOne({alias:author})
+		/* const { arts } = global
+		const uid = global.alias[author] */
+		if (row.uid) {
+			const uid = row.uid;
+			row = await Arts.findOne(tokenid)
 			const url = 'https://storage.googleapis.com/crossverse/'
-			const old = arts[tokenid]
+			const old = row ? artwork(row) : null
 			const isUpdate = old !== undefined
 			const created = now()
 			const key = hash(String(tokenid))
@@ -692,7 +707,7 @@ export const updateNewNFT = async ({ tokenid, store, author, worknumber, categor
 				physical: physical ? 1 : 0,
 			}
 			if (file) {
-				if (isUpdate && old && old.file) await deleteFromGCP([ old.file.slice(old.file.lastIndexOf('/') + 1) ])
+				if (old && old.file) await deleteFromGCP([ old.file.slice(old.file.lastIndexOf('/') + 1) ])
 				const ext = file.ext
 				const filename = tokenid + '-' + now() + '.' + ext
 				const resUpload: any = await uploadToGCP( filename, fs.readFileSync(temp + '/upload_' + file.fileid) )
@@ -701,7 +716,7 @@ export const updateNewNFT = async ({ tokenid, store, author, worknumber, categor
 			}
 			const thumbnailfile = file && thumbnail === null ? file : thumbnail
 			if (thumbnailfile) {
-				if (isUpdate && old.thumbnail) await deleteFromGCP([ old.thumbnail.slice(old.thumbnail.lastIndexOf('/') + 1) ])
+				if (old && old.thumbnail) await deleteFromGCP([ old.thumbnail.slice(old.thumbnail.lastIndexOf('/') + 1) ])
 				const filename = tokenid + '-thumbnail-' + now() + '.webp'
 				const orgfile = temp + '/upload_' + thumbnailfile.fileid
 				const tempfile = temp + '/tmp_' + thumbnailfile.fileid + '.webp'
@@ -754,7 +769,7 @@ export const updateNewNFT = async ({ tokenid, store, author, worknumber, categor
 					to: 0,
 					created
 				})
-				global.arts[tokenid] = artwork(v)
+				/* global.arts[tokenid] = artwork(v)
 				if (tokenid > global.lastTokenId) global.lastTokenId = tokenid
 			} else {
 				const user = global.users[uid]
@@ -773,7 +788,7 @@ export const updateNewNFT = async ({ tokenid, store, author, worknumber, categor
 					old.instock = 1
 				}
 				if (v.file) old.file = url + v.file
-				if (v.thumbnail) old.thumbnail = url + v.thumbnail
+				if (v.thumbnail) old.thumbnail = url + v.thumbnail */
 			}
 			return {status: 'ok'}
 		} else {
@@ -786,14 +801,14 @@ export const updateNewNFT = async ({ tokenid, store, author, worknumber, categor
 export const updateArtSupply = async ( tokenid: number, quantity: number ): Promise<ApiResponse> => {
 	try {
 		await initialize()
-		const { arts } = global
+		/* const { arts } = global
 		const art = arts[tokenid]
 		if (art) {
 			art.totalsupply += quantity
-			art.instock += quantity
-			await Arts.update(tokenid, { totalsupply: art.totalsupply, instock: art.instock })
+			art.instock += quantity */
+			await Arts.update(tokenid, { totalsupply:{$ad:quantity}, instock: {$ad:quantity}})
 			return {status: 'ok'}
-		}
+		/* } */
 	} catch (err:any) {
 		setlog(err)
 	}
@@ -836,8 +851,8 @@ export const updateCampaign = async ({ title, subtitle, lasttime, file }: Campai
 			}
 			fsExtra.emptyDirSync(temp)
 		}
-
 		await Campaigns.insertOrUpdate(data)
+		await Arts.update({drop:1, auction:1}, {auctiontime:lasttime})
 		return { status: 'ok' }
 	} catch (err:any) {
 		setlog(err)
@@ -847,7 +862,8 @@ export const updateCampaign = async ({ title, subtitle, lasttime, file }: Campai
 
 export const getArt = async (id: number): Promise<Artwork | null> => {
 	await initialize()
-	return global.arts[id] || null
+	const v = await Arts.findOne(id);
+	return v ? artwork(v) : null
 }
 
 export const getArtHolderCount = async (id: number): Promise<number> => {
@@ -936,24 +952,31 @@ export const getMyTokens = async (uid: number, id: number): Promise<number> => {
 export const getOfferById = async ( txid: string ): Promise<OfferWithArt | null> => {
 	try {
 		await initialize()
-		const { users, arts } = global
+		const { users } = global
+		/* const { users, arts } = global */
 		const v: any = await Offers.findOne(txid)
+
 		if (v) {
-			const art = arts[v.tokenid]
 			const user = users[v.uid]
-			if (art && user) {
-				return {
-					ownerid:v.uid,
-					txid,
-					art,
-					from: user.alias,
-					buyer: v.buyer,
-					price: toEther(v.price),
-					quantity: v.quantity,
-					amount: toEther(v.amount),
-					status: v.status,
-					created: v.created,
-				}
+			const row = await Arts.findOne(v.tokenid)
+			if (user && row) {
+
+				/* const art = arts[v.tokenid]
+				const user = users[v.uid] */
+				/* if (art && user) { */
+					return {
+						tokenid: v.tokenid,
+						ownerid:v.uid,
+						txid,
+						from: user.alias,
+						buyer: v.buyer,
+						price: toEther(v.price),
+						quantity: v.quantity,
+						amount: toEther(v.amount),
+						status: v.status,
+						created: v.created,
+					}
+				/* } */
 			}
 		}
 	} catch (err:any) {
@@ -970,19 +993,18 @@ const getOffers = async (
 	const result: Array<OfferWithArt> = []
 	try {
 		await initialize()
-		const { users, arts } = global
+		const { users } = global
 		const rows: any = await Offers.find(where, { created: -1 }, null, {
 			limit,
 		})
 		if (rows) {
 			for (const v of rows) {
-				const art = arts[v.tokenid]
 				const user = users[v.uid]
-				if (art && user) {
+				if (user) {
 					result.push({
+						tokenid: v.tokenid,
 						ownerid:v.uid,
 						txid: v.txid,
-						art,
 						from: user.alias,
 						buyer: v.buyer,
 						price: toEther(v.price),
@@ -1041,12 +1063,14 @@ export const getTradeHistory = async (
 export const getCampaign = async (): Promise<Campaigns> => {
 	try {
 		await initialize()
-		const row = await Campaigns.findOne({}, { id: -1 })
-		return {
-			title: row.title,
-			subtitle: row.subtitle,
-			banner: row.banner,
-			lasttime: row.lasttime,
+		const v = await Campaigns.findOne({}, { id: -1 })
+		if (v) {
+			return {
+				title: v.title || '',
+				subtitle: v.subtitle || '',
+				banner: v.banner || '',
+				lasttime: v.lasttime || '',
+			}
 		}
 	} catch (err:any) {
 		setlog(err)
@@ -1091,19 +1115,22 @@ export const getNftList = async (): Promise<Array<Artwork>> => {
 export const getNftById = async (id: number): Promise<Artwork | null> => {
 	try {
 		await initialize()
-		const row = await Nfts.findOne(id)
-		if (row) {
-			const { arts, users } = global
-			const v = arts[row.tokenid]
-			return {
-				...v,
-				ownerid: row.uid,
-				owner: users[row.uid].alias,
-				ownerAddress: row.buyer,
-				price: toEther(row.price),
-				sellPrice: toEther(row.sellprice),
-				balance: row.balance,
-				sellBalance: row.sellbalance,
+		const { users } = global
+		const v = await Nfts.findOne(id)
+		if (v) {
+			const row = await Arts.findOne(v.tokenid);
+			if (row) {
+				const art = artwork(row)
+				return {
+					...art,
+					ownerid: v.uid,
+					owner: users[v.uid].alias,
+					ownerAddress: v.buyer,
+					price: toEther(v.price),
+					sellPrice: toEther(v.sellprice),
+					balance: v.balance,
+					sellBalance: v.sellbalance
+				}
 			}
 		}
 	} catch (err:any) {
@@ -1112,24 +1139,26 @@ export const getNftById = async (id: number): Promise<Artwork | null> => {
 	return null
 }
 
-const getNfts = async (
-	where: string | ModelWhere,
-	limit: number,
-	uid?: number
-): Promise<Array<Artwork>> => {
+const getNfts = async (where: string | ModelWhere, limit: number, uid?: number): Promise<Array<Artwork>> => {
 	const result: Array<Artwork> = []
 	try {
 		await initialize()
-		const rows = await (typeof where === 'string'
-			? Model.exec(where)
-			: Nfts.find(
-				  { ...where, balance: { $ne: 0 } },
-				  { created: -1 },
-				  null,
-				  { limit }
-			  ))
+		const { users } = global
+		const rows = await (typeof where === 'string' ? Model.exec(where) : Nfts.find( { ...where, balance: { $ne: 0 } }, { created: -1 }, null, { limit }))
 		if (rows) {
-			const { arts, users } = global
+			let ps:any = {};
+			for (let row of rows) {
+				ps[row.tokenid] = 1;
+			}
+			let keys:any = Object.keys(ps)
+			const tmp = await Arts.find({id:keys})
+			const arts:{[id:number]:Artwork} = {}
+			if (tmp) {
+				for(let v of tmp) {
+					arts[v.id] = artwork(v)
+				}
+			}
+			
 			for (const row of rows) {
 				const v = arts[row.tokenid]
 				if (v) {
@@ -1157,10 +1186,7 @@ const getNfts = async (
 	return result
 }
 
-export const getListings = async (
-	tokenid: number,
-	uid: number
-): Promise<Array<Artwork>> => {
+export const getListings = async (tokenid: number,uid: number): Promise<Array<Artwork>> => {
 	return await getNfts(
 		{ tokenid, status: 100, sellbalance: { $ne: 0 } },
 		100,
@@ -1168,13 +1194,7 @@ export const getListings = async (
 	)
 }
 
-export const addlist = async (
-	tokenid: number,
-	uid: number,
-	address: string,
-	price: number,
-	quantity: number
-): Promise<boolean> => {
+export const addlist = async (tokenid: number, uid: number, address: string, price: number, quantity: number): Promise<boolean> => {
 	try {
 		const result = await Nfts.update(
 			{ uid, tokenid, buyer: address, balance: { $gt: quantity - 1 } },
@@ -1216,28 +1236,17 @@ export const getPurchased = async (
 }
 
 export const getLikes = async (uid: number): Promise<Array<Artwork>> => {
-	return await getNfts(
-		`SELECT * FROM (SELECT * FROM nfts WHERE uid='${uid}' AND balance!=0) a INNER JOIN  (SELECT (id - uid)/1e8 as tokenid FROM artlikes WHERE uid='${uid}') b USING (tokenid)`,
-		20
-	)
+	return await getNfts(`SELECT * FROM (SELECT * FROM nfts WHERE uid='${uid}' AND balance!=0) a INNER JOIN  (SELECT (id - uid)/1e8 as tokenid FROM artlikes WHERE uid='${uid}') b USING (tokenid)`, 20)
 }
 
 export const getTxs = async (uid: number): Promise<Array<Transaction>> => {
 	const result: Array<Transaction> = []
 	try {
 		await initialize()
-		const rows = await Txs.find({ uid }, { created: -1 }, null, {
-			limit: 20,
-		})
+		const rows = await Txs.find({ uid }, { created: -1 }, null, {limit: 20})
 		if (rows) {
 			for (const v of rows) {
-				result.push({
-					txid: v.txid,
-					from: v.from,
-					to: v.to,
-					status: v.status,
-					created: v.created,
-				})
+				result.push({txid: v.txid, from: v.from, to: v.to, status: v.status, created: v.created})
 			}
 		}
 	} catch (err:any) {
@@ -1268,25 +1277,18 @@ export const getAccount = async (uid: number): Promise<Account | null> => {
 	return null
 }
 
-export const setAccount = async (
-	uid: number,
-	alias: string,
-	about: string,
-	subscribe: boolean,
-	twitter: string | null,
-	facebook: string | null
-): Promise<boolean> => {
+export const setAccount = async ( uid: number, alias: string, about: string, subscribe: boolean, twitter: string | null, facebook: string | null): Promise<boolean> => {
 	try {
 		await initialize()
 		if (global.users[uid]) {
-			const oldAlias = global.users[uid].alias
+			/* const oldAlias = global.users[uid].alias
 			for (const k in global.arts) {
 				const v = global.arts[k]
 				if (v.author === '@' + oldAlias) {
 					v.author = '@' + alias
 					v.aboutAuthor = about
 				}
-			}
+			} */
 			await Users.update(uid, {
 				alias,
 				about,
@@ -1310,10 +1312,7 @@ export const setPassword = async (uid: number, oldpass: string, newpass: string)
 		if (global.users[uid]) {
 			const row = await Users.findOne(uid)
 			if (row && row.password === hash(oldpass)) {
-				await Users.update(uid, {
-					passwd: hash(newpass),
-					updated: now(),
-				})
+				await Users.update(uid, {passwd: hash(newpass), updated: now()})
 				return true
 			}
 		}
@@ -1327,12 +1326,14 @@ export const setMyWallet = async ( uid: number, address: string ): Promise<strin
 	try {
 		await initialize()
 		const isValid = web3.utils.isAddress(address)
-		const { users, wallets } = global
+		const { users } = global
+
 		if (!isValid) return '❌ invalid address format'
 		if (!users[uid]) return '❌ unregistered user'
-		if (wallets[address] && wallets[address] !== uid) return `🦊 [${ address.slice(0, 6) + '...' + address.slice(-4) }] already in use by someone`
+		const row = await Wallets.findOne(address)
+		if (row) return `🦊 [${ address.slice(0, 6) + '...' + address.slice(-4) }] already in use by someone`
 		await Wallets.insert({ key: address, uid })
-		wallets[address] = uid
+		/* wallets[address] = uid */
 		return null
 	} catch (err:any) {
 		return err.message
@@ -1343,18 +1344,14 @@ export const setMyWallet = async ( uid: number, address: string ): Promise<strin
 export const wonInAuction = async (tokenid:number): Promise<void> => {
 	try {
 		await initialize()
-		const {arts} = global;
 		const created = now()
-		const art = arts[tokenid]
-		if (art) {
-			const won = await Offers.findOne({tokenid}, {price: -1})
-			if (won) {
-				const txid = await callBySigner( conf.storefront, abiStorefront, 'setAuctionWinner', tokenid, toHex(won.price * 1e12), won.quantity, toHex(won.price * won.quantity * 1e12), won.buyer )
-				if (txid) await Txs.insert({ txid, uid: won.uid, from: signer, to: conf.storefront, status: 0, created })
-				await Offers.update(won.id, {status:100, won:1})
-			}
-			await Arts.update(tokenid, {auction:0, auctiontime:0})
+		const won = await Offers.findOne({tokenid}, {price: -1})
+		if (won) {
+			const txid = await callBySigner( conf.storefront, abiStorefront, 'setAuctionWinner', tokenid, toHex(won.price * 1e12), won.quantity, toHex(won.price * won.quantity * 1e12), won.buyer )
+			if (txid) await Txs.insert({ txid, uid: won.uid, from: signer, to: conf.storefront, status: 0, created })
+			await Offers.update(won.id, {status:100, won:1})
 		}
+		await Arts.update(tokenid, {auction:0, price:won.price, auctiontime:0})
 	} catch (err:any) {
 		setlog(err)
 	}
@@ -1366,8 +1363,8 @@ export const checkArts = async (): Promise<void> => {
 		const created = now()
 		if (global.lastCheckTime === 0) {
 			global.lastCheckTime = created
-		} else if (created - global.lastCheckTime > 600) {
-			const {arts} = global;
+		} else if (created - global.lastCheckTime > 60) {
+			/* const {arts} = global; */
 			let rows = await Arts.find({drop: 1, auction: 1, auctiontime: {$lt: created}})
 			if (rows) {
 				for (const v of rows) {
@@ -1375,16 +1372,17 @@ export const checkArts = async (): Promise<void> => {
 				}
 			}
 			await checktxs()
-			const where = {drop: 1, created: {$lt: now()}}
+			const where = {drop: 1, created: {$lt: created}}
 			rows = await Arts.find(where)
 			if (rows && rows.length) {
 				const updates = []
 				for(let v of rows) {
-					const art = arts[v.id]
+					const art = artwork(v.id)
+					/* const art = arts[v.id]
 					art.totalsupply -= art.instock
 					art.instock = 0
-					art.drop = false
-					updates.push({id:v.id, totalsupply:art.totalsupply, instock:0, drop:0})
+					art.drop = false */
+					updates.push({id:v.id, totalsupply:{$sb:art.instock}, instock:0, drop:0})
 				}
 				await Arts.insertOrUpdate(updates)
 			}
@@ -1435,9 +1433,9 @@ export const admin_set_arts = async (data: AdminArtValue): Promise<void> => {
 	try {
 		await initialize()
 		await Arts.insertOrUpdate({ id: data.id, [data.field]: data.value })
-		if (data.field === 'drop' || data.field === 'pinned') {
+		/* if (data.field === 'drop' || data.field === 'pinned') {
 			global.arts[data.id][data.field] = data.value === 1
-		}
+		} */
 	} catch (err:any) {
 		setlog(err)
 	}

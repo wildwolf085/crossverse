@@ -30,7 +30,7 @@ export default async ( req: NextApiRequest, res: NextApiResponse<ApiResponse> ):
         const session: any = await getSession({ req })
         if (session && session.user) {
             const { id } = session.user
-            const { wallets } = global
+            /* const { wallets } = global */
             if (v) {
                 const timestamp = now()
                 if (action === 'buy') {
@@ -106,13 +106,14 @@ export default async ( req: NextApiRequest, res: NextApiResponse<ApiResponse> ):
                     const { address, to, count } = req.body
                     const valid = validateAddress(to)
                     if (valid) {
+                        /* const row = await Wallet.
                         const uid = wallets[to] || wallets[to.toLowerCase()]
-                        if (uid) {
-                            await setMyWallet(id, address)
-                            return res.json({ status: 'ok', msg: [to, tokenid, count, '0x0'] })
-                        } else {
+                        if (uid) { */
+                        await setMyWallet(id, address)
+                        return res.json({ status: 'ok', msg: [to, tokenid, count, '0x0'] })
+                        /* } else {
                             return res.json({ status: 'err', msg: 'unregistered account' })
-                        }
+                        } */
                     } else {
                         return res.json({ status: 'err', msg: 'invalid address format' })
                     }

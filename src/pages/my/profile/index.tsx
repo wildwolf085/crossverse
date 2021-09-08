@@ -235,9 +235,9 @@ const ProfilePage = ({isDesktop, isMobile, my, offers, wons, txs}: ProfilePagePr
 								</thead>
 								<tbody>
 									{wons.map((v) => (
-										<tr key={v.art.id}>
+										<tr key={v.tokenid}>
 											<td>
-												<Button onClick={()=>onCancelOffers(v.art.id)} loading={!!status.loading[Number(v.art.id)]}>
+												<Button onClick={()=>onCancelOffers(v.tokenid)} loading={!!status.loading[Number(v.tokenid)]}>
 													Cancel Offer
 												</Button>
 											</td>
@@ -291,9 +291,9 @@ const ProfilePage = ({isDesktop, isMobile, my, offers, wons, txs}: ProfilePagePr
 								</thead>
 								<tbody>
 									{offers.map((v) => (
-										<tr key={v.art.id}>
+										<tr key={v.tokenid}>
 											<td>
-												<Button onClick={()=>onCancelOffers(v.art.id)} loading={!!status.loading[Number(v.art.id)]}>
+												<Button onClick={()=>onCancelOffers(v.tokenid)} loading={!!status.loading[Number(v.tokenid)]}>
 													Cancel Offer
 												</Button>
 											</td>

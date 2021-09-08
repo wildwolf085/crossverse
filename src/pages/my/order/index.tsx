@@ -1,20 +1,19 @@
 import React from 'react'
 import { getSession } from 'next-auth/client'
-import { Row, Col } from 'antd'
+/* import { Row, Col } from 'antd' */
 import classNames from 'classnames'
-import ArtworkCard from '@/components/Artwork/Card'
+/* import ArtworkCard from '@/components/Artwork/Card' */
 import Page from '@/components/Page'
 import PageTitle from '@/components/Page/Title'
-import { ROW_TWO_ITEMS } from '@/config'
-import { getViewURL } from '@/utils/helper'
+/* import { ROW_TWO_ITEMS } from '@/config' */
+import { /* getViewURL,  */offsetDate } from '@/utils/helper'
 import styles from './index.module.scss'
-import { getOffersByUID, getETHPrice } from '@/utils/datamodel'
+import { getOffersByUID } from '@/utils/datamodel'
 import { call } from '@/utils/helper'
 
 const PAGE_TITLE = 'My Orders'
 
 interface MyOrderProps {
-	ethPrice: number
 	wons: Array<OfferWithArt>
 	bids: Array<OfferWithArt>
 }
@@ -25,7 +24,7 @@ interface MyOrderStatus {
 	bids: Array<OfferWithArt>
 }
 
-const MyOrderPage = ({wons, bids, ethPrice}: MyOrderProps) => {
+const MyOrderPage = ({wons, bids}: MyOrderProps) => {
 	const [status, setStatus] = React.useState<MyOrderStatus>({
 		checked: false,
 		wons, 
@@ -43,9 +42,9 @@ const MyOrderPage = ({wons, bids, ethPrice}: MyOrderProps) => {
 		}
 	}, [])
 
-	const renderStatus = () => {
+	/* const renderStatus = () => {
 		return <div>Complete</div>
-	}
+	} */
 
 	return (
 		<Page className={styles.order} title={PAGE_TITLE}>
@@ -56,67 +55,104 @@ const MyOrderPage = ({wons, bids, ethPrice}: MyOrderProps) => {
 				<PageTitle className={styles.subTitle} fontWeight="Medium">
 					Won Auctions
 				</PageTitle>
-				{status.wons.length ? (
-					<Row gutter={46}>
-						{status.wons.map(v => (
-							v.status===100 && <Col {...ROW_TWO_ITEMS} key={v.art.id}>
-								<ArtworkCard
-									key={v.art.id}
-									artist={v.art.author}
-									name={v.art.title}
-									priceALT={v.art.price}
-									priceFIAT={v.art.price * ethPrice}
-									thumbnail={v.art.thumbnail}
-									href={getViewURL(v.art.id)}
-									extra={renderStatus()}
-								/>
-							</Col>
+				{status.wons.length ? <table>
+					<thead>
+						<tr>
+							<th style={{ textAlign: 'left' }}>
+								From
+							</th>
+							<th style={{ textAlign: 'right' }}>
+								Price
+							</th>
+							<th style={{ textAlign: 'right' }}>
+								Quantity
+							</th>
+							<th style={{ textAlign: 'right' }}>
+								Amount
+							</th>
+							<th style={{ textAlign: 'center' }}>
+								Created
+							</th>
+						</tr>
+					</thead>
+					<tbody>
+						{status.wons.map((v) => (
+							<tr key={v.tokenid}>
+								<td style={{ textAlign: 'left' }}>
+									{v.from || '-'}
+								</td>
+								<td style={{ textAlign: 'right' }}>
+									{Number(v.price.toFixed(6))} WETH
+								</td>
+								<td style={{ textAlign: 'right' }}>
+									{v.quantity}
+								</td>
+								<td style={{ textAlign: 'right' }}>
+									{Number( v.amount.toFixed(6) )} WETH
+								</td>
+								<td style={{ textAlign: 'center' }}>
+									{offsetDate(v.created, 0)}
+								</td>
+							</tr>
 						))}
-					</Row>
-				) : (
+					</tbody>
+				</table> : (
 					<div style={{ textAlign: 'center' }}>
-						<img
-							src="/images/empty-bids.svg"
-							width={156}
-							height={114}
-							alt="No wons"
-						/>
-						<div>No wons yet</div>
+						<img src="/images/empty-bids.svg" width={156} height={114} alt="empty offers" />
+						<div>No wons</div>
 					</div>
 				)}
-				
 			</div>
 			<hr style={{marginBottom:50}} />
 			<div className={classNames(styles.cardBid, styles.cardPadding)}>
 				<PageTitle className={styles.subTitle} fontWeight="Medium">
 					Bid History
 				</PageTitle>
-				{status.bids.length ? (
-					<Row gutter={46}>
-						{status.bids.map(v => (
-							v.status!==100 && <Col {...ROW_TWO_ITEMS} key={v.art.id}>
-								<ArtworkCard
-									key={v.art.id}
-									artist={v.art.author}
-									name={v.art.title}
-									priceALT={v.price}
-									priceFIAT={v.price * ethPrice}
-									thumbnail={v.art.thumbnail}
-									href={getViewURL(v.art.id)}
-									extra={renderStatus()}
-								/>
-							</Col>
+				{status.bids.length ? <table>
+					<thead>
+						<tr>
+							<th style={{ textAlign: 'left' }}>
+								From
+							</th>
+							<th style={{ textAlign: 'right' }}>
+								Price
+							</th>
+							<th style={{ textAlign: 'right' }}>
+								Quantity
+							</th>
+							<th style={{ textAlign: 'right' }}>
+								Amount
+							</th>
+							<th style={{ textAlign: 'center' }}>
+								Created
+							</th>
+						</tr>
+					</thead>
+					<tbody>
+						{status.bids.map((v) => (
+							<tr key={v.tokenid}>
+								<td style={{ textAlign: 'left' }}>
+									{v.from || '-'}
+								</td>
+								<td style={{ textAlign: 'right' }}>
+									{Number(v.price.toFixed(6))} WETH
+								</td>
+								<td style={{ textAlign: 'right' }}>
+									{v.quantity}
+								</td>
+								<td style={{ textAlign: 'right' }}>
+									{Number( v.amount.toFixed(6) )} WETH
+								</td>
+								<td style={{ textAlign: 'center' }}>
+									{offsetDate(v.created, 0)}
+								</td>
+							</tr>
 						))}
-					</Row>
-				) : (
+					</tbody>
+				</table> : (
 					<div style={{ textAlign: 'center' }}>
-						<img
-							src="/images/empty-bids.svg"
-							width={156}
-							height={114}
-							alt="No bids"
-						/>
-						<div>No bids yet</div>
+						<img src="/images/empty-bids.svg" width={156} height={114} alt="empty offers" />
+						<div>No bids</div>
 					</div>
 				)}
 			</div>
@@ -126,7 +162,7 @@ const MyOrderPage = ({wons, bids, ethPrice}: MyOrderProps) => {
 
 export async function getServerSideProps({req}:any) {
 	const session: any = await getSession({ req })
-	const ethPrice = await getETHPrice()
+	/* const ethPrice = await getETHPrice() */
 	if (session && session.user) {
 		const { id } = session.user
 		const rows = await getOffersByUID(id)
@@ -139,8 +175,8 @@ export async function getServerSideProps({req}:any) {
 				bids.push(v)
 			}
 		}
-		return { props: { wons, bids, ethPrice } }
+		return { props: { wons, bids/* , ethPrice */ } }
 	}
-	return { props: { wons: [], bids: [], ethPrice } }
+	return { props: { wons: [], bids: []/* , ethPrice */ } }
 }
 export default MyOrderPage

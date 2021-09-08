@@ -1,13 +1,16 @@
 declare namespace NodeJS  {
 	interface Global {
 		inited:boolean
+		users: {
+			[id:number]:User
+		}
 		eth: {
 			price:number
 			updated:number
 		}
-		users: {
-			[id:number]:User
-		}
+		lastCheckTime:number
+		/* 
+		
 		alias: {
 			[k:string]:number
 		}
@@ -18,8 +21,7 @@ declare namespace NodeJS  {
 			[id:number]:Artwork
 		}
 		lastTokenId:number
-		lastArtId:number
-		lastCheckTime:number
+		lastArtId:number */
 		/* store:any */
 	}
 }
@@ -165,7 +167,8 @@ declare interface Offer {
 declare interface OfferWithArt {
 	ownerid:number
 	txid:string
-	art: Artview
+	tokenid:number
+	/* art: Artview */
 	from: string
 	buyer: string
 	price: number
