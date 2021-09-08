@@ -692,7 +692,7 @@ export const updateNewNFT = async ({ tokenid, store, author, worknumber, categor
 				physical: physical ? 1 : 0,
 			}
 			if (file) {
-				if (isUpdate && old.file) await deleteFromGCP([ old.file.slice(old.file.lastIndexOf('/') + 1) ])
+				if (isUpdate && old && old.file) await deleteFromGCP([ old.file.slice(old.file.lastIndexOf('/') + 1) ])
 				const ext = file.ext
 				const filename = tokenid + '-' + now() + '.' + ext
 				const resUpload: any = await uploadToGCP( filename, fs.readFileSync(temp + '/upload_' + file.fileid) )

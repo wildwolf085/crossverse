@@ -31,7 +31,7 @@ interface PostStatus {
 	auctiontime: string
 	balance: number
 	physical: boolean
-	autothumbnail: boolean
+	/* autothumbnail: boolean */
 	fileList: Array<any>
 	thumbnail: Array<any>
 	msg: string|null
@@ -53,7 +53,7 @@ const PostPage = ({ availableTokenId, campaign, ethPrice }: PostPageProp) => {
 		auctiontime: getLocalTime(),
 		balance: 1,
 		physical: false,
-		autothumbnail: true,
+		/* autothumbnail: true, */
 		fileList: [],
 		thumbnail: [],
 		msg: null,
@@ -113,15 +113,15 @@ const PostPage = ({ availableTokenId, campaign, ethPrice }: PostPageProp) => {
 		}
 
 		if (thumbnail===null) {
-			if (!status.autothumbnail) {
+			/* if (!status.autothumbnail) { */
 				return changeStatus({ errmsg: 'select a thumbnail image for NFT, please' })
-			} else {
+			/* } else {
 				const ext = file.name.slice(0,3).toLowerCase();
 				const imageExts = ['jpg', 'png', 'git', 'webp'];
 				if (imageExts.indexOf(ext)===-1) {
 					return changeStatus({ autothumbnail: false, errmsg: 'select a thumbnail image for NFT, please' })
 				}
-			}
+			} */
 		}
 		/* if (status.auction) {
 			if (auctiontime<auctionMin) return changeStatus({ errmsg: 'auction time must be greater than current time.' })
@@ -143,7 +143,7 @@ const PostPage = ({ availableTokenId, campaign, ethPrice }: PostPageProp) => {
 			balance:status.auction ? 1 : balance,
 			physical: status.physical,
 			file: file.response,
-			thumbnail: status.autothumbnail ? null : (thumbnail ? thumbnail.response : null),
+			thumbnail: thumbnail.response,
 		})
 		if (data) {
 			if (data.status === 'ok') {
