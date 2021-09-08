@@ -504,7 +504,7 @@ const ViewPage = ({ isDesktop, logged, art, listings, offers, trades, ethPrice, 
                                     </thead>
                                     <tbody>
                                         {status.offers.map((v) => (
-                                            <tr key={v.art.id}>
+                                            <tr key={v.tokenid}>
                                                 <td>
                                                     {(!art?.drop && !v?.mine) ? (
                                                         <button onClick={() => onSell( v.txid, v.price, v.quantity ) } >
