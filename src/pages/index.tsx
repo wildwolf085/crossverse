@@ -119,14 +119,13 @@ const HomePage = (props: any) => {
   )
 }
 export async function getServerSideProps() {
-  /* await wonInAuction(100000467); */
   checkArts();
   const recommends = await getRecommended()
   const sales = await getSales()
   const resales = await getResales()
   const ethPrice = await getETHPrice()
   return {
-    props: { recommends, sales, resales, ethPrice }, // will be passed to the page component as props
+    props: { recommends, sales, resales, ethPrice }
   }
 }
 export default HomePage
