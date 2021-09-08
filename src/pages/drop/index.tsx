@@ -40,42 +40,18 @@ const getLeftTime = (time:number):TimeLeft => {
 	};
 }
 
-const DropPage = ({
-	isDesktop,
-	isMobile,
-	title,
-	subtitle,
-	banner,
-	lasttime,
-	arts,
-	ethPrice,
-}: DropPageProp): any => {
+const DropPage = ({isDesktop, isMobile, title, subtitle, banner, lasttime, arts, ethPrice}: DropPageProp): any => {
 	const [time, setTime] = React.useState(getLeftTime(lasttime));
 	React.useEffect(() => {
-		const timer=setTimeout(() => setTime(getLeftTime(lasttime)), 1000);
-		return () => clearTimeout(timer);
-	}, [time]);
+		setInterval(() => setTime(getLeftTime(lasttime)), 1000)
+	}, []);
 
 	return (
 		<Page className={styles.drop} title={PAGE_NAME}>
 			<div className={styles.banner}>
-				<Banner
-					dots={false}
-					images={[
-						{
-							image: banner,
-							key: 1,
-						},
-					]}
-				/>
+				<Banner dots={false} images={[{image: banner, key: 1}]}/>
 			</div>
-			<div
-				className={classNames(styles.count, {
-					[styles['count-border']]: isDesktop,
-					[styles['count-padding']]: isDesktop,
-					[styles['count-padding-mobile']]: isMobile,
-				})}
-			>
+			<div className={classNames(styles.count, {[styles['count-border']]: isDesktop, [styles['count-padding']]: isDesktop, [styles['count-padding-mobile']]: isMobile})}>
 				<div className={styles['count-text']}>Drop Countdown:</div>
 				<div className={styles['count-text']}>{new Date(lasttime*1000).toLocaleString()}</div>
 				<div className={styles[`count-time`]}>{(time.d>9?'':'0')+time.d}:{(time.h>9?'':'0')+time.h}:{(time.m>9?'':'0')+time.m}:{(time.s>9?'':'0')+time.s}</div>
@@ -116,8 +92,7 @@ export const getServerSideProps = async (): Promise<any> => {
 	const arts = await getDrops()
 	const campaign = await getCampaign()
 	const ethPrice = await getETHPrice()
-	return {
-		props: { ...campaign, arts, ethPrice }, // will be passed to the page component as props
-	}
+	return {props: {...campaign, arts, ethPrice}}
 }
+
 export default DropPage

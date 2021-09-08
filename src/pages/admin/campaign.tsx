@@ -7,7 +7,7 @@ import Page from '@/components/Page'
 import PageTitle from '@/components/Page/Title'
 import styles from './create.module.scss'
 
-import { call } from '@/utils/helper'
+import { call, fromLocalTime, getLocalTime, now } from '@/utils/helper'
 import { getCampaign } from '@/utils/datamodel'
 
 const PAGE_NAME = 'Update drop campaign'
@@ -24,7 +24,7 @@ const CampaignPage = ({title, subtitle, lasttime}: CampaignPageProps) => {
 		loading: false,
 		title,
 		subtitle,
-		lasttime: new Date(lasttime*1000).toISOString().slice(0,16),
+		lasttime: getLocalTime(lasttime),
 		fileList: [],
 		msg: null,
 		errmsg: null,
@@ -42,22 +42,11 @@ const CampaignPage = ({title, subtitle, lasttime}: CampaignPageProps) => {
 	const onFinish = async () => {
 		const title = status.title.trim()
 		const subtitle = status.subtitle.trim()
-		const lasttime = status.lasttime
+		const lasttime = fromLocalTime(status.lasttime)
 		const file: any = status.fileList.length > 0 ? status.fileList[0] : null
-		/* if (file === null || !file.response) {
-			return changeStatus({ errmsg: 'select a image file for banner, please' })
-		} */
-		if (!lasttime) {
-			return changeStatus({ errmsg: 'Set an expiration time for your campaign, please.' })
-		}
-
+		if (lasttime<lasttime) return changeStatus({ errmsg: 'invalid expiration time' })
 		setStatus({ ...status, loading: true })
-		const data = await call('/api/admin/campaign', {
-			title,
-			subtitle,
-			lasttime:Math.round(new Date(lasttime).getTime()/1000),
-			file: file && file.response || null,
-		})
+		const data = await call('/api/admin/campaign', {title, subtitle, lasttime, file: file && file.response || null})
 		if (data) {
 			if (data.status === 'ok') {
 				window.open('/drop', '_self')
@@ -75,87 +64,22 @@ const CampaignPage = ({title, subtitle, lasttime}: CampaignPageProps) => {
 						{PAGE_NAME}
 					</PageTitle>
 					<Row justify="center">
-						<Form
-							className={`${styles.form} ant-col`}
-							form={form}
-							style={{ flex: '1 1 auto' }}
-							onFinish={onFinish}
-						>
+						<Form className={`${styles.form} ant-col`} form={form} style={{ flex: '1 1 auto' }} onFinish={onFinish}>
 							<b>Title</b>
-							<Form.Item
-								className={styles.formItem}
-								rules={[
-									{
-										required: true,
-										message: 'Title required',
-									},
-								]}
-							>
+							<Form.Item className={styles.formItem} rules={[{required: true, message: 'Title required'}]}>
 								<Input ref={refTitle} placeholder="Title" value={status.title || ''} onChange={(e) => changeStatus({errmsg: null,title: e.target.value })}/>
 							</Form.Item>
 							<b>Sub Title</b>
-							<Form.Item
-								className={styles.formItem}
-								rules={[
-									{
-										required: true,
-										message: 'Sub Title required',
-									},
-								]}
-							>
-								<Input
-									ref={refSubtitle}
-									placeholder="Sub Title"
-									value={status.subtitle}
-									onChange={(e) =>
-										changeStatus({
-											errmsg: null,
-											subtitle: e.target.value,
-										})
-									}
-								/>
+							<Form.Item className={styles.formItem} rules={[{required: true, message: 'Sub Title required'}]}>
+								<Input ref={refSubtitle} placeholder="Sub Title" value={status.subtitle} onChange={(e) => changeStatus({errmsg: null, subtitle: e.target.value})}/>
 							</Form.Item>
 							<b>Last Time</b>
-							<Form.Item
-								className={styles.formItem}
-								rules={[
-									{
-										required: true,
-										message: 'Last Time required',
-									},
-								]}
-							>
-								<Input
-									type="datetime-local"
-									ref={refLastTime}
-									placeholder="Last Time"
-									value={status.lasttime}
-									min={new Date().toISOString().slice(0,16)}
-									onChange={(e) =>
-										changeStatus({
-											errmsg: null,
-											lasttime: e.target.value,
-										})
-									}
-								/>
+							<Form.Item className={styles.formItem} rules={[{required: true, message: 'Last Time required'}]}>
+								<Input type="datetime-local" ref={refLastTime} placeholder="Last Time" value={status.lasttime} min={getLocalTime()} onChange={(e) => changeStatus({errmsg: null, lasttime: e.target.value})}/>
 							</Form.Item>
 							<b>Supportted Format: JPG, PNG: Less than 1.0 MB</b>
-							<Form.Item
-								className={styles.formItem}
-								rules={[
-									{
-										required: true,
-										message: 'File required',
-									},
-								]}
-							>
-								<Upload
-									listType="picture"
-									action="/api/admin/upload"
-									maxCount={1}
-									fileList={status.fileList}
-									onChange={onFileChange}
-								>
+							<Form.Item className={styles.formItem} rules={[{required: true, message: 'File required'}]}>
+								<Upload listType="picture" action="/api/admin/upload" maxCount={1} fileList={status.fileList} onChange={onFileChange}>
 									<Button icon={<UploadOutlined />}>Upload File</Button>
 								</Upload>
 							</Form.Item>
@@ -179,13 +103,9 @@ export const getServerSideProps = async ({req}:any) => {
 		const { id } = session.user
 		if (id<100010) {
 			const data = await getCampaign()
-			return {
-				props: { ...data }
-			}
+			return {props: { ...data }}
 		}
 	}
-	return {
-		props: {}
-	}
+	return {props: {}}
 }
 export default CampaignPage

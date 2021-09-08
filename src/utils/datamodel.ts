@@ -152,9 +152,7 @@ const artwork = (v: any): Artwork => {
 
 const updateGlobalUser = (data: User): void => {
 	const v: any = global.users[data.id]
-	if (v) {
-		if (global.alias[v.alias] !== undefined) delete global.alias[v.alias]
-	}
+	if (v && global.alias[v.alias] !== undefined) delete global.alias[v.alias]
 	if (data.alias !== '') global.alias[data.alias] = data.id
 	global.users[data.id] = data
 }
@@ -725,8 +723,7 @@ export const updateNewNFT = async ({ tokenid, store, author, worknumber, categor
 					await sharp(orgfile).resize(w, h).toFile(tempfile)
 					const resUpload: any = await uploadToGCP( filename, fs.readFileSync(tempfile) )
 					if (!resUpload || (resUpload && resUpload.err)) {
-						return { status: 'err', msg: `Google cloud upload error`,
-						}
+						return { status: 'err', msg: `Google cloud upload error`}
 					}
 					v.thumbnail = filename
 				} catch (err:any) {
@@ -740,6 +737,10 @@ export const updateNewNFT = async ({ tokenid, store, author, worknumber, categor
 				v.drop = 1;
 				v.status = 100
 				v.created = created
+			}
+			if (auction) {
+				v.totalsupply = 1
+				v.instock = 1
 			}
 			await Arts.insertOrUpdate(v)
 			if (!isUpdate) {
@@ -767,15 +768,19 @@ export const updateNewNFT = async ({ tokenid, store, author, worknumber, categor
 				old.price = toEther(price)
 				old.auction = auction
 				old.auctiontime = auctiontime
+				if (auction) {
+					old.totalsupply = 1
+					old.instock = 1
+				}
 				if (v.file) old.file = url + v.file
 				if (v.thumbnail) old.thumbnail = url + v.thumbnail
 			}
-			return { status: 'ok' }
+			return {status: 'ok'}
 		} else {
-			return { status: 'err', msg: `unknown artist` }
+			return {status: 'err', msg: 'unknown artist'}
 		}
 	} catch (err:any) {
-		return { status: 'err', msg: err.message }
+		return {status: 'err', msg: err.message}
 	}
 }
 export const updateArtSupply = async ( tokenid: number, quantity: number ): Promise<ApiResponse> => {
@@ -787,29 +792,21 @@ export const updateArtSupply = async ( tokenid: number, quantity: number ): Prom
 			art.totalsupply += quantity
 			art.instock += quantity
 			await Arts.update(tokenid, { totalsupply: art.totalsupply, instock: art.instock })
-			return { status: 'ok' }
+			return {status: 'ok'}
 		}
 	} catch (err:any) {
 		setlog(err)
 	}
-	return { status: 'err' }
+	return {status: 'err'}
 }
 
 export const updateCampaign = async ({ title, subtitle, lasttime, file }: CampaignParams): Promise<ApiResponse> => {
 	try {
 		await initialize()
-		const data: any = {
-			id: 1,
-			title,
-			subtitle,
-			lasttime,
-		}
+		const data: any = {id: 1, title, subtitle, lasttime}
 		if (file) {
 			const row = await Campaigns.findOne(1)
-			if (row && row.banner)
-				await deleteFromGCP([
-					row.banner.slice(row.banner.lastIndexOf('/') + 1),
-				])
+			if (row && row.banner) await deleteFromGCP([row.banner.slice(row.banner.lastIndexOf('/') + 1)])
 			const filename = 'campaign-' + new Date().getTime() + '.webp'
 			const tempfile = temp + '/upload_' + file.fileid
 			const tempfile2 = temp + '/upload_' + filename
@@ -829,10 +826,7 @@ export const updateCampaign = async ({ title, subtitle, lasttime, file }: Campai
 					}
 				}
 				await sharp(tempfile).resize(w, h).toFile(tempfile2)
-				const resUpload: any = await uploadToGCP(
-					filename,
-					fs.readFileSync(tempfile2)
-				)
+				const resUpload: any = await uploadToGCP(filename, fs.readFileSync(tempfile2))
 				if (!resUpload || (resUpload && resUpload.err)) {
 					return { status: 'err', msg: `Google cloud upload error` }
 				}
@@ -1310,11 +1304,7 @@ export const setAccount = async (
 	return false
 }
 
-export const setPassword = async (
-	uid: number,
-	oldpass: string,
-	newpass: string
-): Promise<boolean> => {
+export const setPassword = async (uid: number, oldpass: string, newpass: string): Promise<boolean> => {
 	try {
 		await initialize()
 		if (global.users[uid]) {
@@ -1425,7 +1415,7 @@ export const admin_get_arts = async (): Promise<AdminArts> => {
 					physical: v.physical,
 					price: toEther(v.price),
 					auction: v.auction,
-					auctiontime: new Date((v.auctiontime || now() + 86400 * 7) * 1000).toISOString().slice(0, 16),
+					auctiontime: v.auctiontime,
 					totalsupply: v.totalsupply,
 					instock: v.instock,
 					volume: v.volume,

@@ -11,7 +11,7 @@ declare interface AdminArt {
 	physical: boolean
 	price: number
 	auction: boolean
-	auctiontime: string
+	auctiontime: number
 	totalsupply: number
 	instock: nubmer
 	// balance: number

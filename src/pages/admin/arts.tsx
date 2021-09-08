@@ -4,11 +4,12 @@ import { Spin, Switch } from 'antd'
 import Page from '@/components/Page'
 import styles from './index.module.scss'
 import { call, getViewURL } from '@/utils/helper'
-import { getETHPrice, admin_get_arts } from '@/utils/datamodel'
+import { getETHPrice, admin_get_arts, getCampaign } from '@/utils/datamodel'
 import DialogArt, {DialogArtProps} from './components/DialogArt'
 
 interface AdminProps {
 	arts: AdminArts 
+	campaign: Campaigns
 	ethPrice: number
 }
 interface AdminStatus {
@@ -19,7 +20,7 @@ interface AdminStatus {
 
 const PAGE_NAME = 'NFT Manager'
 
-const AdminPage = ( { arts, ethPrice }: AdminProps) => {
+const AdminPage = ( { arts, ethPrice, campaign }: AdminProps) => {
 	const [status, setStatus] = React.useState<AdminStatus>({
 		loading: false,
 		arts
@@ -35,13 +36,7 @@ const AdminPage = ( { arts, ethPrice }: AdminProps) => {
 	}
 	const showDialogArt = (id:number) => {
 		const d = status.arts[id];
-		setStatus({
-			...status, 
-			args:{ 
-				id,
-				d
-			}
-		})
+		setStatus({ ...status, args:{id, d, campaign}})
 	}
 	const onUpdate = (id:number, data:AdminArt) => {
 		const newStatus = {...status, arts: {...status.arts, [id]:data}}
@@ -112,6 +107,7 @@ const AdminPage = ( { arts, ethPrice }: AdminProps) => {
 export async function getServerSideProps({req}:any) {
 	const session: any = await getSession({ req })
 	const ethPrice = await getETHPrice()
+	const campaign = await getCampaign()
 	let arts:AdminArts = {};
 	if (session && session.user) {
 		const { id } = session.user
@@ -119,6 +115,6 @@ export async function getServerSideProps({req}:any) {
 			arts = await admin_get_arts();
 		}
 	}
-	return { props: { arts, ethPrice } }
+	return { props: { arts, campaign, ethPrice } }
 }
 export default AdminPage

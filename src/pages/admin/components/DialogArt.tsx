@@ -3,12 +3,13 @@ import { Modal, Form, Upload, Button, Input, Checkbox } from 'antd'
 import { UploadOutlined } from '@ant-design/icons'
 
 import Category from '@/config/category.json'
-import { call, now } from '@/utils/helper'
+import { call, fromLocalTime, getLocalTime} from '@/utils/helper'
 import styles from './DialogArt.module.scss'
 
 export interface DialogArtProps {
 	onClose?: () => void
 	onUpdate?: (id:number, data:AdminArt) => void
+	campaign: Campaigns
 	id: number,
 	d: AdminArt
 }
@@ -23,12 +24,7 @@ interface DialogArtStatus {
 	errmsg: string
 }
 
-const DialogArt: React.FC<DialogArtProps> = ({
-	id,
-	d,
-	onClose,
-	onUpdate
-}) => {
+const DialogArt: React.FC<DialogArtProps> = ({id, d, campaign, onClose, onUpdate}) => {
 	const [status, setStatus] = React.useState<DialogArtStatus>({
 		loading: false,
 		supplyvisible: false,
@@ -51,7 +47,7 @@ const DialogArt: React.FC<DialogArtProps> = ({
 		physical: !!d?.physical,
 		price: d?.price || 0,
 		auction: !!d?.auction,
-		auctiontime: d?.auctiontime || new Date().toISOString().slice(0,16),
+		auctiontime: campaign.lasttime, //d?.auctiontime || 0,
 		totalsupply: d?.totalsupply || 0,
 		instock: d?.instock || 0,
 		volume: d?.volume || 0,
@@ -110,13 +106,17 @@ const DialogArt: React.FC<DialogArtProps> = ({
 			description,
 			priceEth: price,
 			auction: auction,
-			auctiontime: Math.round(new Date(auctiontime).getTime()/1000),
+			auctiontime,
 			physical,
 			file: file && file.response || null,
 			thumbnail: thumbnail && thumbnail.response || null
 		})
 		if (result) {
 		 	if (result.status === 'ok') {
+				 if (auction) {
+					 data.instock = 1;
+					 data.totalsupply = 1;
+				 }
 				if (onUpdate) onUpdate(id, data)
 			} else {
 				setStatus( { ...status, errmsg: result.msg } )
@@ -175,59 +175,16 @@ const DialogArt: React.FC<DialogArtProps> = ({
 					<Input placeholder="Store" value={data.store} onChange={ (e) =>update('store', e.target.value) } />
 				</Form.Item>
 				<b>Author</b>
-				<Form.Item
-					className={styles.item}
-					rules={[
-						{
-							required: true,
-							message: 'Author required',
-						},
-					]}
-				>
-					<Input
-						ref={ refAuthor }
-						placeholder="Author"
-						value={ data.author }
-						onChange={ (e) =>update('author', e.target.value) }
-					/>
+				<Form.Item className={styles.item} rules={[{required: true,message: 'Author required'}]}>
+					<Input ref={ refAuthor } placeholder="Author" value={ data.author } onChange={ (e) =>update('author', e.target.value) }/>
 				</Form.Item>
 				<b>Work Number</b>
-				<Form.Item
-					className={styles.item}
-					rules={[
-						{
-							required: true,
-							message: 'Work Number required',
-						},
-					]}
-				>
-					<Input
-						ref={refWorknumber}
-						placeholder="Work Number"
-						type="number"
-						min="0"
-						max="10000"
-						step="1"
-						
-						value={ data.worknumber }
-						onChange={ (e) =>update('worknumber', Number(e.target.value)) }
-					/>
+				<Form.Item className={styles.item} rules={[{required: true, message: 'Work Number required'}]}>
+					<Input ref={refWorknumber} placeholder="Work Number" type="number" min={0} max={10000} step="1" value={data.worknumber} onChange={(e) =>update('worknumber', Number(e.target.value))}/>
 				</Form.Item>
 				<b>Category</b>
-				<Form.Item
-					className={styles.item}
-					rules={[
-						{
-							required: true,
-							message: 'Category required',
-						},
-					]}
-				>
-					<select
-						ref={refCategory}
-						value={ data.category }
-						onChange={ (e) =>update('category', Number(e.target.value)) }
-					>
+				<Form.Item className={styles.item} rules={[{required: true, message: 'Category required'}]}>
+					<select ref={refCategory} value={ data.category } onChange={ (e) =>update('category', Number(e.target.value)) }>
 						<option value="0">- Select category -</option>
 						{Category.map((v) => (
 							<option key={v.value} value={v.value}>
@@ -237,61 +194,22 @@ const DialogArt: React.FC<DialogArtProps> = ({
 					</select>
 				</Form.Item>
 				<b>Name</b>
-				<Form.Item
-					className={styles.item}
-					rules={[
-						{
-							required: true,
-							message: 'Name required',
-						},
-					]}
-				>
-					<Input
-						ref={refName}
-						placeholder="Name"
-						value={ data.name }
-						onChange={ (e) =>update('name', e.target.value) }
-					/>
+				<Form.Item className={styles.item} rules={[{required: true, message: 'Name required'}]}>
+					<Input ref={refName} placeholder="Name" value={data.name} onChange={(e) =>update('name', e.target.value)}/>
 				</Form.Item>
 				<b>Description</b>
-				<Form.Item
-				   	className={styles.item}
-					rules={[
-						{
-							required: true,
-							message: 'Description required',
-						},
-					]}
-				>
-					<Input.TextArea
-						ref={refDescription}
-						placeholder="Description"
-						value={ data.description }
-						onChange={ (e) =>update('description', e.target.value) }
-					/>
+				<Form.Item className={styles.item} rules={[{required: true, message: 'Description required'}]}>
+					<Input.TextArea ref={refDescription} placeholder="Description" value={ data.description } onChange={ (e) =>update('description', e.target.value) }/>
 				</Form.Item>
 				
 				<b>Supportted Format: JPG, PNG, GIF, MP3, MP4: Less than 20MB</b>
-				<Form.Item
-					className={styles.item}
-					rules={[
-						{
-							required: true,
-							message: 'File required',
-						}
-					]}
-				>
-					<Upload
-						action="/api/admin/upload"
-						maxCount={1}
-						fileList={ status.fileList }
-						onChange={onFileChange}
-					>
+				<Form.Item className={styles.item} rules={[{required: true, message: 'File required'}]}>
+					<Upload action="/api/admin/upload" maxCount={1} fileList={ status.fileList } onChange={onFileChange}>
 						<Button icon={<UploadOutlined />}>Upload File</Button>
 					</Upload>
 				</Form.Item>
 				<b>Thumbnail (supportted Format: JPG, PNG: Less than 1MB)</b>
-				<div style={{marginBottom:20}}>
+				{/* <div style={{marginBottom:20}}>
 				<Checkbox
 					checked={status.autothumbnail}
 					onChange={(e) =>
@@ -301,61 +219,30 @@ const DialogArt: React.FC<DialogArtProps> = ({
 					Automatically generate a thumbnail image.
 				</Checkbox>
 				</div>
-				{status.autothumbnail ? null : (
-					<Form.Item
-						className={styles.formItem}
-						rules={[
-							{
-								required: true,
-								message: 'File required',
-							},
-						]}
-					>
-						<Upload
-							listType="picture"
-							action="/api/admin/upload"
-							maxCount={1}
-							fileList={status.thumbnail}
-							onChange={onThumbnailChange}
-						>
+				{status.autothumbnail ? null : ( */}
+					<Form.Item className={styles.formItem} rules={[{required: true, message: 'File required'}]}>
+						<Upload listType="picture" action="/api/admin/upload" maxCount={1} fileList={status.thumbnail} onChange={onThumbnailChange} >
 							<Button icon={<UploadOutlined />}>Upload thumbnail</Button>
 						</Upload>
 					</Form.Item>
-				)}
+				{/* )} */}
 				<div style={{marginBottom:20}}>
-					<Checkbox
-						checked={data.auction}
-						onChange={(e) =>update('auction', e.target.checked)}
-					>
+					<Checkbox checked={data.auction} onChange={(e) =>update('auction', e.target.checked)}>
 						Highest Bid (Auction to the highest bidder)
 					</Checkbox>
 				</div>
 				<b>Price (ETH)</b>
-
 				<div style={{ display: 'flex' }}>
-					<Form.Item
-						className={styles.item}
-						style={{ width: 150 }}
-						rules={[
-							{
-								required: true,
-								message: 'Price required',
-							},
-						]}
-					>
-						<Input
-							ref={refPrice}
-							placeholder="Price"
-							type="number"
-							min="0.001"
-							max="1000"
-							step="0.0001"
-							value={ data.price }
-							onChange={ (e) =>update('price', Number(e.target.value)) }
-						/>
+					<Form.Item className={styles.item} style={{ width: 150 }} rules={[ { required: true, message: 'Price required' }]} >
+						<Input ref={refPrice} placeholder="Price" type="number" min="0.001" max="1000" step="0.0001" value={ data.price } onChange={ (e) =>update('price', Number(e.target.value)) } />
 					</Form.Item>
 				</div>
 				{data.auction ? (
+					<div style={{marginBottom:20}}>
+						<b>Expiration Date: {getLocalTime(data.auctiontime)}</b>
+					</div>
+				) : null}
+				{/* {data.auction ? (
 					<>
 						<b>Expiration Date</b>
 						<Form.Item className={styles.formItem} rules={[ { required: true, message: 'Last Time required' } ]} >
@@ -372,7 +259,7 @@ const DialogArt: React.FC<DialogArtProps> = ({
 						</Form.Item>
 						<div style={{marginBottom:20}}>Your auction will automatically end at this time and the highest bidder will win. No need to cancel it!</div>
 					</>
-				) : null}
+				) : null} */}
 				
 				<Form.Item className={styles.item}>
 					<Checkbox checked={ data.physical } onChange={ (e) =>update('physical', e.target.checked) } >

@@ -6,7 +6,7 @@ import Page from '@/components/Page'
 import PageTitle from '@/components/Page/Title'
 import styles from './create.module.scss'
 
-import { call, getViewURL, now } from '@/utils/helper'
+import { call, getLocalTime, getViewURL, now } from '@/utils/helper'
 import Category from '@/config/category.json'
 import { getAvailableTokenId, getCampaign, getETHPrice } from '@/utils/datamodel'
 
@@ -50,7 +50,7 @@ const PostPage = ({ availableTokenId, campaign, ethPrice }: PostPageProp) => {
 		description: '',
 		price: 1,
 		auction: false,
-		auctiontime: new Date((now() + 7200) *1000).toISOString().slice(0,16),
+		auctiontime: getLocalTime(),
 		balance: 1,
 		physical: false,
 		autothumbnail: true,
@@ -66,11 +66,11 @@ const PostPage = ({ availableTokenId, campaign, ethPrice }: PostPageProp) => {
 	const refName = React.useRef<Input>(null)
 	const refDescription = React.useRef<HTMLTextAreaElement>(null)
 	const refPrice = React.useRef<Input>(null)
-	const refAuctionTime = React.useRef<Input>(null)
+	/* const refAuctionTime = React.useRef<Input>(null) */
 	const refBalance = React.useRef<Input>(null)
 
-	const auctionMin = now() + 7200 * 1
-	const auctionMax = campaign.lasttime
+	/* const auctionMin = now() + 7200 * 1 */
+	/* const auctionMax = campaign.lasttime */
 
 	const changeStatus = (v: any) => setStatus({ ...status, ...v })
 	const onFileChange = async (res: any) => {
@@ -97,7 +97,7 @@ const PostPage = ({ availableTokenId, campaign, ethPrice }: PostPageProp) => {
 		const name = status.name.trim()
 		const description = status.description.trim()
 		const price = Number(status.price) || 0
-		const auctiontime = Math.round(new Date(status.auctiontime).getTime()/1000)
+		/* const auctiontime = Math.round(new Date(status.auctiontime).getTime()/1000) */
 		const balance = Number(status.balance) || 0
 		const file: any = status.fileList.length > 0 ? status.fileList[0] : null
 		const thumbnail: any = status.thumbnail.length > 0 ? status.thumbnail[0] : null
@@ -123,10 +123,10 @@ const PostPage = ({ availableTokenId, campaign, ethPrice }: PostPageProp) => {
 				}
 			}
 		}
-		if (status.auction) {
+		/* if (status.auction) {
 			if (auctiontime<auctionMin) return changeStatus({ errmsg: 'auction time must be greater than current time.' })
 			if (auctiontime>auctionMax) return changeStatus({ errmsg: 'auction time must be less than drop expire time.' })
-		}
+		} */
 
 		setStatus({ ...status, loading: true })
 		const data = await call('/api/admin/create', {
@@ -139,8 +139,8 @@ const PostPage = ({ availableTokenId, campaign, ethPrice }: PostPageProp) => {
 			description,
 			priceEth: price,
 			auction:status.auction,
-			auctiontime: Math.round(new Date(auctiontime).getTime()/1000),
-			balance,
+			auctiontime: status.auction ? campaign.lasttime : 0,
+			balance:status.auction ? 1 : balance,
 			physical: status.physical,
 			file: file.response,
 			thumbnail: status.autothumbnail ? null : (thumbnail ? thumbnail.response : null),
@@ -214,18 +214,18 @@ const PostPage = ({ availableTokenId, campaign, ethPrice }: PostPageProp) => {
 								</Form.Item>
 
 								<b>Thumbnail (supportted Format: JPG, PNG: Less than 1MB)</b>
-								<div style={{marginBottom:20}}>
+								{/* <div style={{marginBottom:20}}>
 								<Checkbox checked={status.autothumbnail} onChange={(e) => changeStatus({errmsg: null, autothumbnail: e.target.checked})}>
 									Automatically generate a thumbnail image.
 								</Checkbox>
-								</div>
-								{status.autothumbnail ? null : (
+								</div> */}
+								{/* {status.autothumbnail ? null : ( */}
 									<Form.Item className={styles.formItem} rules={[{required: true, message: 'File required'},]}>
 										<Upload listType="picture" action="/api/admin/upload" maxCount={1} fileList={status.thumbnail} onChange={onThumbnailChange}>
 											<Button icon={<UploadOutlined />}>Upload thumbnail</Button>
 										</Upload>
 									</Form.Item>
-								)}
+								{/* )} */}
 								
 								<div style={{marginBottom:20}}>
 									<Checkbox checked={status.auction} onChange={(e) => onCheckAuction(e.target.checked)}>
@@ -241,8 +241,13 @@ const PostPage = ({ availableTokenId, campaign, ethPrice }: PostPageProp) => {
 										{status.price ? '$ ' + (status.price * ethPrice).toFixed(2) : ''}
 									</div>
 								</div>
-								
+
 								{status.auction ? (
+									<div style={{marginBottom:20}}>
+										<b>Expiration Date: {getLocalTime(campaign.lasttime)}</b>
+									</div>
+								) : null}
+								{/* {status.auction ? (
 									<>
 										<b>Expiration Date</b>
 										<Form.Item className={styles.formItem} rules={[{required: true, message: 'Last Time required'},]}>
@@ -250,11 +255,15 @@ const PostPage = ({ availableTokenId, campaign, ethPrice }: PostPageProp) => {
 										</Form.Item>
 										<div>Your auction will automatically end at this time and the highest bidder will win. No need to cancel it!</div>
 									</>
-								) : null}
-								<b>In stock</b>
-								<Form.Item className={styles.formItem} rules={[{required: true, message: 'Stock required'},]}>
-									<Input ref={refBalance} placeholder="Maximum saleable" type="number" min={1} max={10000} step={1} value={status.balance || ''} onChange={(e) => changeStatus({errmsg: null, balance: e.target.value})}/>
-								</Form.Item>
+								) : null} */}
+								<div style={{marginBottom:20}}>
+									<b>Total Supply {status.auction ? ' : 1' : ''}</b>
+									{status.auction ? null : (
+										<Form.Item className={styles.formItem} rules={[{required: true, message: 'Stock required'},]}>
+											<Input ref={refBalance} placeholder="Maximum saleable" type="number" min={1} max={10000} step={1} value={status.balance || ''} onChange={(e) => changeStatus({errmsg: null, balance: e.target.value})}/>
+										</Form.Item>
+									)}
+								</div>
 								<Form.Item className={styles.formItem}>
 									<Checkbox checked={status.physical} onChange={(e) => changeStatus({ errmsg: null, physical: e.target.checked })}>
 										Physical

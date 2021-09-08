@@ -38,24 +38,19 @@ export const hash = (message: string): string => {
 	return crypto.createHash('sha256').update(Buffer.from(buf.buffer, buf.byteOffset, buf.byteLength)).digest().toString('hex')
 }
 
-export const validURL = (url:string) => !!new RegExp('^(https?:\\/\\/)?'+ // protocol
+export const validURL = (url:string) => (!!new RegExp('^(https?:\\/\\/)?'+ // protocol
 	'((([a-z\\d]([a-z\\d-]*[a-z\\d])*)\\.)+[a-z]{2,}|'+ // domain name
 	'((\\d{1,3}\\.){3}\\d{1,3}))'+ // OR ip (v4) address
 	'(\\:\\d+)?(\\/[-a-z\\d%_.~+]*)*'+ // port and path
 	'(\\?[;&a-z\\d%_.~+=-]*)?'+ // query string
-	'(\\#[-a-z\\d_]*)?$','i').test(url);
+	'(\\#[-a-z\\d_]*)?$','i').test(url));
   
 
 export const now = (): number => Math.round(Date.now() / 1000)
 export const offsetDate: any = (time: number, offset: number) => dayjs(time * 1000 + (offset || 0) * 3600000).from(dayjs())
 export const formatTime = (time: number, offset = 8): string => {
 	const iOffset = Number(offset)
-	const date =
-		time === undefined
-			? new Date(Date.now() * 1000 + 3600000 * iOffset)
-			: typeof time === 'number'
-			? new Date(time * 1000 + 3600000 * iOffset)
-			: new Date(+time + 3600000 * iOffset)
+	const date = time === undefined ? new Date(Date.now() * 1000 + 3600000 * iOffset) : typeof time === 'number' ? new Date(time * 1000 + 3600000 * iOffset) : new Date(+time + 3600000 * iOffset)
 	const y = date.getUTCFullYear()
 	const m = date.getUTCMonth() + 1
 	const d = date.getUTCDate()
@@ -66,13 +61,18 @@ export const formatTime = (time: number, offset = 8): string => {
 	const tt = ('0' + hh).slice(-2) + ':' + ('0' + mm).slice(-2) + ':' + ('0' + ss).slice(-2)
 	return y + '-' + dt + ' ' + tt
 }
+
+export const getLocalTime = (time?:number):string => (new Date(((time || now()) - new Date().getTimezoneOffset() * 60) * 1000).toISOString().slice(0,16))
+export const fromLocalTime = (time:string):number => (Math.round(new Date(time).getTime() / 1000))
+
+
 export const call = async (url: string, json: any): Promise<any> => {
 	const res = await fetch(url, {
 		method: 'POST',
 		mode: 'cors',
 		cache: 'no-cache',
 		credentials: 'same-origin',
-		headers: { 'Content-Type': 'application/json' },
+		headers: {'Content-Type': 'application/json'},
 		redirect: 'follow', 
 		referrerPolicy: 'no-referrer', 
 		body: JSON.stringify(json)
