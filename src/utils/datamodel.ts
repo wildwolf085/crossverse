@@ -1385,21 +1385,18 @@ export const checkArts = async (): Promise<void> => {
 				}
 			}
 			await checktxs()
-			const campaign = await getCampaign()
-			if (campaign) {
-				const where = {drop: 1, created: {$gt: campaign.lasttime}}
-				rows = await Arts.find(where)
-				if (rows && rows.length) {
-					const updates = []
-					for(let v of rows) {
-						const art = arts[v.id]
-						art.totalsupply -= art.instock
-						art.instock = 0
-						art.drop = false
-						updates.push({id:v.id, totalsupply:art.totalsupply, instock:0, drop:0})
-					}
-					await Arts.insertOrUpdate(updates)
+			const where = {drop: 1, created: {$lt: now()}}
+			rows = await Arts.find(where)
+			if (rows && rows.length) {
+				const updates = []
+				for(let v of rows) {
+					const art = arts[v.id]
+					art.totalsupply -= art.instock
+					art.instock = 0
+					art.drop = false
+					updates.push({id:v.id, totalsupply:art.totalsupply, instock:0, drop:0})
 				}
+				await Arts.insertOrUpdate(updates)
 			}
 			global.lastCheckTime = created
 		}
