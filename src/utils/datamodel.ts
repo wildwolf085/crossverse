@@ -194,7 +194,8 @@ const getArts = async (type: 'drop' | 'pinned' | 'all'): Promise<Array<Artwork>>
 export const validateAddress = (address: string) => web3.utils.isAddress(address)
 
 export const getAvailableTokenId = async ():Promise<number> => {
-	let tokenid = await Arts.max('tokenid')
+	await initialize();
+	let tokenid = await Arts.max('id')
 	if (tokenid < 1e8) tokenid = 1e8
 	tokenid += Math.round(Math.random() * 100)
 	return tokenid + 1
@@ -1338,33 +1339,28 @@ export const wonInAuction = async (tokenid:number): Promise<void> => {
 		setlog(err)
 	}
 }
-
 export const checkArts = async (): Promise<void> => {
 	try {
 		await initialize()
+
 		const created = now()
-		if (global.lastCheckTime === 0) {
-			global.lastCheckTime = created
-		} else if (created - global.lastCheckTime > 60) {
-			/* const {arts} = global; */
-			let rows = await Arts.find({drop: 1, auction: 1, auctiontime: {$lt: created}})
+		const campaign = await getCampaign();
+		if (campaign && campaign.lasttime<created) {
+			let rows = await Arts.find({drop: 1})
 			if (rows) {
-				for (const v of rows) {
-					await wonInAuction(v.id)
-				}
-			}
-			await checktxs()
-			const where = {drop: 1, created: {$lt: created}}
-			rows = await Arts.find(where)
-			if (rows && rows.length) {
 				const updates = []
-				for(let v of rows) {
+				let isAuction = false;
+				for (const v of rows) {
+					if (v.auction) {
+						await wonInAuction(v.id)
+						isAuction = true
+					}
 					const art = artwork(v)
 					updates.push({id:v.id, totalsupply:art.totalsupply - art.instock, instock:0, drop:0})
 				}
-				await Arts.insertOrUpdate(updates)
+				if (updates.length) await Arts.insertOrUpdate(updates)
+				if (isAuction) await checktxs()
 			}
-			global.lastCheckTime = created
 		}
 	} catch (err:any) {
 		setlog(err)
