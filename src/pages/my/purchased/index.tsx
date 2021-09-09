@@ -8,12 +8,13 @@ import PageTitle from '@/components/Page/Title'
 import { ROW_THREE_ITEMS } from '@/config'
 import styles from './index.module.scss'
 import { getPurchased, getETHPrice } from '@/utils/datamodel'
-import { call } from '@/utils/helper'
+import { call, getDomain } from '@/utils/helper'
 import { getViewURL } from '@/utils/helper'
 import TransferDialog from '@/components/Dialogs/TransferDialog'
 
 import useWallet from '@/utils/useWallet'
-/* import Connector from '@/connector' */
+
+import ShareBox from '@/components/Dialogs/ShareBox'
 
 
 const PAGE_NAME = 'Purchased'
@@ -27,6 +28,8 @@ interface MyPurchasedStatus {
 	transferdata: Artwork|null
 	checked: boolean
 	data: Array<Artwork>
+	domain: string
+    shareUrl:string
 
 }
 
@@ -35,21 +38,26 @@ const MyPurchasedPage = ({ data, ethPrice }: MyPurchasedProps) => {
 		transferdata: null,
 		checked: false,
 		data,
+		domain: '',
+		shareUrl:''
 	})
-	
 	const wallet = useWallet(false);
 	const address = wallet.address.toLowerCase();
 
 	React.useEffect(() => {
+		const domain = getDomain()
 		if (!status.checked) {
+			setStatus({ ...status, domain, checked: true })
 			call('/api/my/purchased', {}).then((res) => {
 				if (res && res.status === 'ok') {
-					setStatus({ ...status, checked: true, data: res.msg })
+					setStatus({ ...status, checked: true, domain, data: res.msg })
 				}
 			})
+		} else {
+			setStatus({...status, domain})
 		}
 	}, [])
-
+	const onShare = (url:string) => setStatus({...status, shareUrl:status.domain+url})
 	return (
 		<Page className={styles.purchased} title={PAGE_NAME}>
 			<PageTitle className={styles.title} fontWeight="Bold">
@@ -75,7 +83,7 @@ const MyPurchasedPage = ({ data, ethPrice }: MyPurchasedProps) => {
 										<Button disabled={address!==v.ownerAddress?.toLowerCase()} title={address!==v.ownerAddress?.toLowerCase()?"The current wallet is not the wallet where the tokens are stored.":''} onClick={()=>setStatus({...status, transferdata:v})} block wrapClassName={styles.btn}>
 											Transfer
 										</Button>
-										<Button block wrapClassName={styles.btn}>
+										<Button onClick={()=>onShare(getViewURL(v.id))} block wrapClassName={styles.btn} type="primary">
 											Share
 										</Button>
 									</>
@@ -92,6 +100,7 @@ const MyPurchasedPage = ({ data, ethPrice }: MyPurchasedProps) => {
 					art={status.transferdata}
 				/>
 			) : null }
+			<ShareBox onClose={()=> setStatus({...status,shareUrl:''})} url={status.shareUrl} visible={status.shareUrl!==''}/>
 		</Page>
 	)
 }

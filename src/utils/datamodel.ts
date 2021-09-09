@@ -78,11 +78,6 @@ const initialize = async (): Promise<any> => {
 	if (!global.inited) {
 		global.inited = true
 		global.users = {}
-		/* global.alias = {}
-		global.wallets = {}
-		global.arts = {}
-		global.lastTokenId = 0
-		global.lastCheckTime = 0 */
 		let rows: any = await Users.find({ alias: { $ne: null } })
 		if (rows) {
 			for (const v of rows) {
@@ -90,21 +85,6 @@ const initialize = async (): Promise<any> => {
 				global.users[v.id] = user
 			}
 		}
-
-		/* rows = await Wallets.find({})
-		if (rows) {
-			for (const v of rows) {
-				global.wallets[v.key] = v.uid
-			}
-		}
-
-		rows = await Arts.find({})
-		if (rows) {
-			for (const v of rows) {
-				global.arts[v.id] = artwork(v)
-				if (global.lastTokenId < v.id) global.lastTokenId = v.id
-			}
-		} */
 	}
 }
 
@@ -128,7 +108,7 @@ const artwork = (v: any): Artwork => {
 		store: v.store,
 		category: v.category,
 		title: v.name,
-		author: '@' + user.alias,
+		author: user ? '@' + user.alias : '-',
 		aboutAuthor: user.about || '',
 		description: v.description || '',
 		worknumber: v.worknumber || 0,
@@ -1378,12 +1358,8 @@ export const checkArts = async (): Promise<void> => {
 			if (rows && rows.length) {
 				const updates = []
 				for(let v of rows) {
-					const art = artwork(v.id)
-					/* const art = arts[v.id]
-					art.totalsupply -= art.instock
-					art.instock = 0
-					art.drop = false */
-					updates.push({id:v.id, totalsupply:{$sb:art.instock}, instock:0, drop:0})
+					const art = artwork(v)
+					updates.push({id:v.id, totalsupply:art.totalsupply - art.instock, instock:0, drop:0})
 				}
 				await Arts.insertOrUpdate(updates)
 			}

@@ -80,7 +80,7 @@ const MarketPlacePage = ({ isDesktop, data, ethPrice }: MarketPlacePageProp) => 
 
 	const onCategory = (category: number) => setStatus({...status, category})
 	const onOrderBy = (orderBy: number) => setStatus({...status, orderBy})
-	const onShare = (url:string) => setStatus({...status, shareUrl:status.domain+'/'+url})
+	const onShare = (url:string) => setStatus({...status, shareUrl:status.domain+url})
 	return (
 		<Page className={styles.market} title={getPageName(PAGE_NAME)}>
 			<div className={styles.head}>
@@ -135,9 +135,7 @@ const MarketPlacePage = ({ isDesktop, data, ethPrice }: MarketPlacePageProp) => 
 					))}
 				</Row>
 			</div>
-			<ShareBox onClose={()=> setStatus({...status,shareUrl:''})} url={status.shareUrl} visible={status.shareUrl!==''}>
-
-			</ShareBox>
+			<ShareBox onClose={()=> setStatus({...status,shareUrl:''})} url={status.shareUrl} visible={status.shareUrl!==''}/>
 		</Page>
 	)
 }
