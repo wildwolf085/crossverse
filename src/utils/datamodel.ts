@@ -77,6 +77,7 @@ const initialize = async (): Promise<any> => {
 	if (!Model.db) await Model.connect()
 	if (!global.inited) {
 		global.inited = true
+		global.lastCheckTime = 0
 		global.users = {}
 		let rows: any = await Users.find({ alias: { $ne: null } })
 		if (rows) {
@@ -1410,9 +1411,6 @@ export const admin_set_arts = async (data: AdminArtValue): Promise<void> => {
 	try {
 		await initialize()
 		await Arts.insertOrUpdate({ id: data.id, [data.field]: data.value })
-		/* if (data.field === 'drop' || data.field === 'pinned') {
-			global.arts[data.id][data.field] = data.value === 1
-		} */
 	} catch (err:any) {
 		setlog(err)
 	}
