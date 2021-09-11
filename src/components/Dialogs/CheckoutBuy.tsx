@@ -170,8 +170,6 @@ const CheckoutBuy: React.FC<CheckoutBuyProps> = ({ visible, art, args, ethPrice,
 					</div>
 				</h2>
 			) : null}
-			{/* <div>use wallet: {wallet.address}</div>
-			<div><a onClick={wallet.connect}>Connect</a> {wallet.connecting ? 'connecting...':''} {wallet.checkingBalance ? 'checking balance...':''} {wallet.err} ETH {wallet.ETH} WETH {wallet.WETH}</div> */}
 		</Modal>
 	)
 }

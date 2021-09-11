@@ -4,27 +4,15 @@ import classNames from 'classnames'
 import styles from './index.module.scss'
 
 interface InputProps extends AInputProps {
-  circle?: boolean
+	circle?: boolean
 }
 
 const prefixCls = 'input'
 
-const Input: React.FC<InputProps> = ({
-  addonBefore,
-  className,
-  circle,
-  ...restProps
-}) => {
-  return (
-    <AInput
-      className={classNames(className, styles[prefixCls], {
-        [styles[`${prefixCls}-circle`]]: circle,
-        [styles[`${prefixCls}-group`]]: addonBefore,
-      })}
-      addonBefore={addonBefore}
-      {...restProps}
-    />
-  )
+const Input: React.FC<InputProps> = ({addonBefore, className, circle, ...restProps}) => {
+	return (
+		<AInput className={classNames(className, styles[prefixCls], {[styles[`${prefixCls}-circle`]]: circle, [styles[`${prefixCls}-group`]]: addonBefore})} addonBefore={addonBefore} {...restProps}/>
+	)
 }
 
 export default Input

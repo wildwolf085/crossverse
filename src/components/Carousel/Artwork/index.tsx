@@ -13,11 +13,7 @@ interface CarouselArtworkProps {
 	isMobile?: boolean
 }
 
-const CarouselArtwork: React.FC<CarouselArtworkProps> = ({
-	className,
-	dataSource,
-	isMobile,
-}) => {
+const CarouselArtwork: React.FC<CarouselArtworkProps> = ({className, dataSource, isMobile}) => {
 	const chunkSize = isMobile ? 1 : 3
 	const displayWorkList = chunk(dataSource, chunkSize)
 

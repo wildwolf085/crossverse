@@ -10,19 +10,10 @@ interface ShareBoxProps {
 
 const ShareBox: React.FC<ShareBoxProps> = ({ url, visible, onClose }) => {
 	return (
-		<Modal
-			visible={visible}
-			title="Share this URL"
-			onCancel={onClose}
-			footer={[
-				<Button key="copy" onClick={()=>copyToClipboard(url)}>
-					Copy To Clipboard
-				</Button>,
-				<Button key="back" onClick={onClose}>
-					Close
-				</Button>
-			]}
-		>
+		<Modal visible={visible} title="Share this URL" onCancel={onClose} footer={[
+			<Button key="copy" onClick={()=>copyToClipboard(url)}>Copy To Clipboard</Button>, 
+			<Button key="back" onClick={onClose}> Close </Button> 
+		]}>
 			<a>{url}</a>
 		</Modal>
 	)

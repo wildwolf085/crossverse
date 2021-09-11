@@ -26,12 +26,7 @@ interface MakeOfferStatus {
 	errmsg: string
 }
 
-const MakeOffer: React.FC<MakeOfferProps> = ({
-	visible,
-	art,
-	onClose,
-	onUpdate,
-}) => {
+const MakeOffer: React.FC<MakeOfferProps> = ({visible, art, onClose, onUpdate}) => {
 	let price = art?.price || 0
 	const auction = art?.auction && art?.drop
 	if (auction) {
@@ -42,7 +37,6 @@ const MakeOffer: React.FC<MakeOfferProps> = ({
 		price,
 		quantity: 1,
 		amount: price,
-		/* token: 'WETH', */
 		tx: null,
 		confirmations: 0,
 		success: false,
@@ -79,53 +73,23 @@ const MakeOffer: React.FC<MakeOfferProps> = ({
 					},
 				})
 				setStatus({ ...status, loading: true, tx })
-				const success = await wallet.waitTransaction(
-					tx.txid,
-					AtLeast,
-					(confirmations: number) => {
-						setStatus({
-							...status,
-							errmsg: '',
-							loading: true,
-							tx,
-							confirmations,
-						})
-					}
-				)
-				setStatus({
-					...status,
-					errmsg: success ? '' : 'Time out',
-					tx,
-					success: !!success,
-					loading: true,
+				const success = await wallet.waitTransaction( tx.txid, AtLeast, (confirmations: number) => {
+					setStatus({ ...status, errmsg: '', loading: true, tx, confirmations })
 				})
+				setStatus({ ...status, errmsg: success ? '' : 'Time out', tx, success: !!success, loading: true })
 
-				let res = (await call('/api/artwork/' + art.id, {
-					action: 'check',
-				})) as ApiResponse
+				let res = (await call('/api/artwork/' + art.id, {action: 'check'})) as ApiResponse
 				if (res.status === 'ok') {
-					res = (await call('/api/artwork/' + art.id, {
-						action: 'offers',
-					})) as ApiResponse
+					res = (await call('/api/artwork/' + art.id, {action: 'offers',})) as ApiResponse
 					if (res.status === 'ok') {
 						onUpdate(res.msg)
 					}
 				}
 			} else {
-				setStatus({
-					...status,
-					loading: false,
-					tx: null,
-					errmsg: result.errmsg || '',
-				})
+				setStatus({ ...status, loading: false, tx: null, errmsg: result.errmsg || '' })
 			}
 		} else {
-			setStatus({
-				...status,
-				loading: false,
-				tx: null,
-				errmsg: '🦊 Connect to Metamask',
-			})
+			setStatus({ ...status, loading: false, tx: null, errmsg: '🦊 Connect to Metamask', })
 		}
 	}
 	const onCancel = () => {
