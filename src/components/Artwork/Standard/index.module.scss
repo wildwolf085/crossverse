@@ -2,113 +2,113 @@
 @import "../../../common/css/rem";
 
 .artworkStandard {
-  font-family: $font-medium;
-  font-size: $font-size-base;
-  line-height: $line-height-en;
+	font-family: $font-medium;
+	font-size: $font-size-base;
+	line-height: $line-height-en;
 
-  &-vertical {
-    &-padding {
-      padding-top: rem(44px);
-    }
-  }
+	&-vertical {
+		&-padding {
+			padding-top: rem(44px);
+		}
+	}
 
-  &-horizontal {
-    display: flex;
-    /* justify-content: center; */
-  }
+	&-horizontal {
+		display: flex;
+		/* justify-content: center; */
+	}
 
-  &-thumbnail {
-    border-radius: 8px;
-    overflow: hidden;
+	&-thumbnail {
+		border-radius: 8px;
+		overflow: hidden;
 
-    &-image {
-      margin: 0;
-    }
-  }
+		&-image {
+			margin: 0;
+		}
+	}
 
-  &-body {
-    &-flex {
-      display: flex;
-      flex-direction: column;
-    }
+	&-body {
+		&-flex {
+			display: flex;
+			flex-direction: column;
+		}
 
-    &-center {
-      align-items: center;
-    }
+		&-center {
+			align-items: center;
+		}
 
-    &-inner {
-      &-stretch {
-        flex: 1;
-      }
-    }
+		&-inner {
+			&-stretch {
+				flex: 1;
+			}
+		}
 
-    &-footer {
+		&-footer {
 
-    }
+		}
 
-    &-horizontal {
-      max-width: 640px;
-      margin-left: rem(72px);
-    }
-  }
+		&-horizontal {
+			max-width: 640px;
+			margin-left: rem(72px);
+		}
+	}
 
-  &-name {
-    font-size: $font-size-xl;
-    height: rem(82px);
-  }
+	&-name {
+		font-size: $font-size-xl;
+		height: rem(82px);
+	}
 
-  &-artist {
-    margin: rem(8px) 0 rem(28px) 0;
-  }
+	&-artist {
+		margin: rem(8px) 0 rem(28px) 0;
+	}
 
-  &-introduction {
-    max-height: 156px;
-  }
+	&-introduction {
+		max-height: 156px;
+	}
 
-  &-price {
-    display: flex;
+	&-price {
+		display: flex;
 
-    &-content {
-      height: auto;
-    }
+		&-content {
+			height: auto;
+		}
 
-    &-alt {
-      font-size: $font-size-xl;
-    }
+		&-alt {
+			font-size: $font-size-xl;
+		}
 
-    &-fiat {
-      color: $color-grey-2;
-    }
-  }
+		&-fiat {
+			color: $color-grey-2;
+		}
+	}
 
-  &-icon {
-    height: 43px;
-    width: 43px;
-  }
+	&-icon {
+		height: 43px;
+		width: 43px;
+	}
 
-  &-text {
-    display: -webkit-box;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    -webkit-box-orient: vertical;
+	&-text {
+		display: -webkit-box;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		-webkit-box-orient: vertical;
 
-    &-title {
-      -webkit-line-clamp: 2;
-    }
+		&-title {
+			-webkit-line-clamp: 2;
+		}
 
-    &-desc {
-      -webkit-line-clamp: 5;
-    }
-  }
+		&-desc {
+			-webkit-line-clamp: 5;
+		}
+	}
 }
 
 @media only screen and (max-width: $breakpoint-sm) {
-  .artworkStandard {
-    font-size: $font-size-sm;
+	.artworkStandard {
+		font-size: $font-size-sm;
 
-    &-name {
-      font-size: 24px;
-      height: 62px;
-    }
-  }
+		&-name {
+			font-size: 24px;
+			height: 62px;
+		}
+	}
 }

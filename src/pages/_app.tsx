@@ -34,10 +34,7 @@ const CustomApp: FC<AppProps> = ({ Component, pageProps }) => {
 					<meta httpEquiv="X-UA-Compatible" content="IE=edge,chrome=1" />
 					<meta name="keywords" content="" />
 					<meta name="description" content="" />
-					<meta
-							name="viewport"
-							content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0, viewport-fit=cover"
-					/>
+					<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0, viewport-fit=cover" />
 					<meta name="author" content="" />
 					<meta name="renderer" content="webkit" />
 					<title>{getPageName()}</title>

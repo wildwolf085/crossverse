@@ -51,5 +51,5 @@
     "next-env.d.ts",
     "**/*.ts",
     "**/*.tsx"
-  ]
+, "src/utils/ethereum-event-logs.js"  ]
 }

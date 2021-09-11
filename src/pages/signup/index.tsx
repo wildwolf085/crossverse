@@ -37,11 +37,7 @@ const SignUpPage: React.FC = () => {
 			const data = await call('/api/auth/code', { email: status.email })
 			if (data) {
 				if (data.status === 'ok') {
-					changeStatus({
-						errmsg: null,
-						msg: 'Verification code sent successfully.',
-						sent: time,
-					})
+					changeStatus({errmsg: null, msg: 'Verification code sent successfully.', sent:time})
 				} else {
 					changeStatus({ errmsg: data.msg })
 				}
@@ -54,13 +50,7 @@ const SignUpPage: React.FC = () => {
 	}
 	const onFinish = async () => {
 		if (status.sent) {
-			const data = await call('/api/auth/register', {
-				alias: status.alias,
-				email: status.email,
-				password: status.password,
-				phone: status.phone,
-				code: status.code,
-			})
+			const data = await call('/api/auth/register', {alias:status.alias, email:status.email, password:status.password, phone:status.phone, code:status.code})
 			if (data) {
 				if (data.status === 'ok') {
 					changeStatus({ errmsg: null, success: true })
@@ -69,10 +59,7 @@ const SignUpPage: React.FC = () => {
 				}
 			}
 		} else {
-			changeStatus({
-				errmsg:
-					'Click the [Get code] button to send the verification code first.',
-			})
+			changeStatus({errmsg:'Click the [Get code] button to send the verification code first.'})
 		}
 	}
 
@@ -96,134 +83,22 @@ const SignUpPage: React.FC = () => {
 					</div>
 				) : (
 					<Row justify="center">
-						<Form
-							className={`${styles.form} ant-col`}
-							form={form}
-							style={{ flex: '1 1 auto' }}
-							onFinish={onFinish}
-						>
-							<Form.Item
-								className={styles.formItem}
-								name="alias"
-								rules={[
-								{
-									required: true,
-									message: 'Alias required',
-								},
-								{
-									message: 'alias should be correct format.',
-								},
-								]}
-							>
-								<Input
-								circle
-								className={styles.input}
-								placeholder="Display name"
-								value={status.alias || ''}
-								onChange={(e) =>
-									changeStatus({
-									errmsg: null,
-									alias: e.target.value.trim(),
-									})
-								}
-								/>
+						<Form className={`${styles.form} ant-col`} form={form} style={{ flex: '1 1 auto' }} onFinish={onFinish}>
+							<Form.Item className={styles.formItem} name="alias" rules={[{required: true, message:'Alias required'}, {message:'alias should be correct format.'}]}>
+								<Input circle className={styles.input} placeholder="Display name" value={status.alias || ''} onChange={(e) => changeStatus({errmsg: null, alias: e.target.value.trim()})}/>
 							</Form.Item>
-							<Form.Item
-								className={styles.formItem}
-								name="email"
-								rules={[
-									{
-										required: true,
-										message: 'Email required',
-									},
-									{
-										type: 'email',
-										message: 'Email should be correct format.',
-									},
-								]}
-							>
-								<Input
-									circle
-									className={styles.input}
-									placeholder="Email"
-									value={status.email || ''}
-									onChange={(e) =>
-										changeStatus({
-											errmsg: null,
-											email: e.target.value.trim(),
-										})
-									}
-								/>
+							<Form.Item className={styles.formItem} name="email" rules={[{required: true, message: 'Email required'}, {type: 'email', message: 'Email should be correct format.'}]}>
+								<Input circle className={styles.input} placeholder="Email" value={status.email || ''} onChange={(e) => changeStatus({errmsg: null, email: e.target.value.trim()})}/>
 							</Form.Item>
-							<Form.Item
-								className={styles.formItem}
-								name="password"
-								rules={[
-									{
-										required: true,
-										message: 'Password required',
-									},
-								]}
-							>
-								<Password
-									circle
-									className={styles.input}
-									placeholder="Password"
-									value={status.password || ''}
-									onChange={(e) =>
-										changeStatus({
-											errmsg: null,
-											password: e.target.value.trim(),
-										})
-									}
-								/>
+							<Form.Item className={styles.formItem} name="password" rules={[{required: true, message:'Password required'}]}>
+								<Password circle className={styles.input} placeholder="Password" value={status.password || ''} onChange={(e) => changeStatus({errmsg: null,password: e.target.value.trim()})}/>
 							</Form.Item>
-							<Form.Item
-								className={styles.formItem}
-								name="mobile"
-								rules={[
-									{
-										required: true,
-										message: 'Mobile required',
-									},
-								]}
-							>
-								<Input
-									circle
-									className={styles.input}
-									placeholder="Mobile phone No."
-									value={status.phone || ''}
-									onChange={(e) =>
-										changeStatus({
-											errmsg: null,
-											phone: e.target.value.trim(),
-										})
-									}
-								/>
+							<Form.Item className={styles.formItem} name="mobile" rules={[{required: true, message: 'Mobile required'}]}>
+								<Input circle className={styles.input} placeholder="Mobile phone No." value={status.phone || ''} onChange={(e) => changeStatus({errmsg: null, phone: e.target.value.trim()})}/>
 							</Form.Item>
-							<Form.Item
-								className={styles.formItem}
-								name="verifyCode"
-								rules={[
-									{
-										required: true,
-										message: 'Verification code required',
-									},
-								]}
-							>
+							<Form.Item className={styles.formItem} name="verifyCode" rules={[{required: true, message:'Verification code required'}]}>
 								<div className={styles.emailverify}>
-									<Input
-										circle
-										className={styles.input}
-										placeholder="Email verification code."
-										value={status.code || ''}
-										onChange={(e) =>
-											changeStatus({
-												errmsg: null,
-												code: e.target.value.trim(),
-											})
-										}
-									/>
+									<Input circle className={styles.input} placeholder="Email verification code." value={status.code || ''} onChange={(e) => changeStatus({errmsg: null, code: e.target.value.trim()})}/>
 									{status.sent && time - status.sent < 60 ? (
 										<Button className={styles.btn}>
 											<span className={styles.icon}>

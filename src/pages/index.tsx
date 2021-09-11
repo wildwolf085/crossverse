@@ -1,7 +1,6 @@
-import React, { useState } from 'react'
+import React from 'react'
 import { Row, Col, Typography } from 'antd'
 import classNames from 'classnames'
-/* import map from 'lodash/map' */
 import ArtworkCard from '@/components/Artwork/Card'
 import CarouselArtwork from '@/components/Carousel/Artwork'
 import Banner from '@/components/Carousel/Banner'
@@ -9,7 +8,6 @@ import Page from '@/components/Page'
 import More from '@/components/More'
 import { ROW_TWO_ITEMS_XL } from '@/config'
 import { getViewURL } from '@/utils/helper'
-/* import mockSales from '@/mock/sales.json' */
 import styles from './index.module.scss'
 import {
 	getRecommended,
@@ -21,17 +19,17 @@ import {
 
 const { Title } = Typography
 
-const HomePage = (props: any) => {
-	const { isDesktop, isMobile, recommends, sales, resales, ethPrice } = props
-	const [dataRecommends] = useState<Array<Artwork>>(recommends)
-	const [dataSales] = useState<Array<Artwork>>(sales)
-	const [dataResales] = useState<Array<Artwork>>(resales)
 
-	/* useEffect(() => setWorkItems(mockSales), []) */
+interface HomePageProps {
+	isDesktop:boolean
+	isMobile:boolean
+	recommends:Array<Artwork>
+	sales:Array<Artwork>
+	resales:Array<Artwork>
+	ethPrice:number
+}
 
-/*   const renderExtra = (quantity?: number) => {
-		return <div>{`${quantity}pcs`}</div>
-	} */
+const HomePage = ({isDesktop, isMobile, recommends, sales, resales, ethPrice}: HomePageProps) => {
 
 	return (
 		<Page className={styles.index}>
@@ -58,11 +56,7 @@ const HomePage = (props: any) => {
 				<Title className={styles.titleRecommend} level={2}>
 					Recommended NFT works
 				</Title>
-				<CarouselArtwork
-					className={styles.b}
-					dataSource={dataRecommends}
-					isMobile={isMobile}
-				/>
+				<CarouselArtwork className={styles.b} dataSource={recommends} isMobile={isMobile} />
 			</div>
 			<div className={styles.cardSale}>
 				<Row gutter={18}>
@@ -70,48 +64,15 @@ const HomePage = (props: any) => {
 						<Title className={styles.titleSale} level={2}>
 							Sales record list
 						</Title>
-						{dataSales.map((v,k) => (
-							<ArtworkCard
-								key={k}
-								artist={v.author}
-								name={v.title}
-								priceALT={v.price}
-								priceFIAT={v.price * ethPrice}
-								thumbnail={v.thumbnail}
-								href={getViewURL(v.id)}
-								/* extra={renderExtra(v.instock || 1)} */
-							/>
-						))}
-						{isDesktop && (
-							<More className={styles.more} href="/my/purchased">
-								Full list
-							</More>
-						)}
+						{sales.map((v,k) => <ArtworkCard key={k} artist={v.author} name={v.title} priceALT={v.price} priceFIAT={v.price * ethPrice} thumbnail={v.thumbnail} href={getViewURL(v.id)} /> )}
+						{isDesktop && <More className={styles.more} href="/my/purchased">Full list</More>}
 					</Col>
 					<Col {...ROW_TWO_ITEMS_XL}>
-						<Title
-							className={classNames(styles.titleSale, styles.titleResale)}
-							level={2}
-						>
+						<Title className={classNames(styles.titleSale, styles.titleResale)} level={2} >
 							Re-sales record list
 						</Title>
-						{dataResales.map((v,k) => (
-							<ArtworkCard
-								key={k}
-								artist={v.author}
-								name={v.title}
-								priceALT={v.price}
-								priceFIAT={v.price * ethPrice}
-								thumbnail={v.thumbnail}
-								href={getViewURL(v.id)}
-								/* extra={renderExtra(v.amount || 1)} */
-							/>
-						))}
-						{isDesktop && (
-							<More className={styles.more} href="/my/purchased">
-								Full list
-							</More>
-						)}
+						{resales.map((v,k) => <ArtworkCard key={k} artist={v.author} name={v.title} priceALT={v.price} priceFIAT={v.price * ethPrice} thumbnail={v.thumbnail} href={getViewURL(v.id)} />)}
+						{isDesktop && <More className={styles.more} href="/my/purchased">Full list</More>}
 					</Col>
 				</Row>
 			</div>

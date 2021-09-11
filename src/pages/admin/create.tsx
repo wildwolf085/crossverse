@@ -39,7 +39,7 @@ interface PostStatus {
 	success: boolean
 }
 
-const PostPage = ({ availableTokenId, campaign, ethPrice }: PostPageProp) => {
+const PostPage = ({ availableTokenId, campaign, ethPrice }: PostPageProp):JSX.Element => {
 	const [form] = Form.useForm()
 	const [status, setStatus] = React.useState<PostStatus>({
 		loading: false,

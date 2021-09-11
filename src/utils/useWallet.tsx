@@ -129,7 +129,6 @@ const useWallet = (checkBalance:boolean, tokenid?:number):UseWalletTypes => {
     
 	const callMethod = async ( to: string, abi: any, method: string, args: Array<string|number|boolean> ): Promise<any> => {
 		try {
-			console.log('call-'+method, args);
 			const contract = new web3.eth.Contract(abi, to)
 			const res = await contract.methods[method](...args).call()
 			return res

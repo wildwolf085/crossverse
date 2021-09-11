@@ -33,7 +33,7 @@ interface MyPurchasedStatus {
 
 }
 
-const MyPurchasedPage = ({ data, ethPrice }: MyPurchasedProps) => {
+const MyPurchasedPage = ({ data, ethPrice }: MyPurchasedProps):JSX.Element => {
 	const [status, setStatus] = React.useState<MyPurchasedStatus>({
 		transferdata: null,
 		checked: false,

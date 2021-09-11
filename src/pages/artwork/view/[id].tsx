@@ -94,7 +94,7 @@ const TradeAttrs: { [event: number]: { icon: IconDefinition; label: string } } =
     }
 }
 
-const ViewPage = ({ isDesktop, logged, art, listings, offers, trades, ethPrice, hodlerCount, like, myOwn }: ViewPageProp): any => {
+const ViewPage = ({ isDesktop, logged, art, listings, offers, trades, ethPrice, hodlerCount, like, myOwn }: ViewPageProp):JSX.Element => {
     const [status, setStatus] = React.useState<ViewPageStatus>({
         loadingDeleteOffers:false,
         loadingDelist:false,

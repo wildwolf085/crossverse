@@ -14,7 +14,6 @@ declare interface AdminArt {
 	auctiontime: number
 	totalsupply: number
 	instock: nubmer
-	// balance: number
 	volume: number
 	drop: number
 	pinned: number

@@ -39,27 +39,14 @@ const WalletConnectPage = (): JSX.Element => {
                 </PageTitle>
                 <div className={styles.wallet}>
                     <div className={styles.logo}>
-                        <img
-                            className={styles.img}
-                            src="/images/logos/metamask.png"
-                        />
+                        <img className={styles.img} src="/images/logos/metamask.png"/>
                     </div>
                     {wallet.connected ? (
-                        <h1>
-                            {wallet.address.slice(0, 12) + '......' + wallet.address.slice(-8)}
-                        </h1>
+                        <h1>{wallet.address.slice(0, 12) + '......' + wallet.address.slice(-8)}</h1>
                     ) : (
                         <>
-                            <h2 style={{ color: 'red', marginBottom: 20 }}>
-                                {wallet.err}
-                            </h2>
-                            <Button
-                                onClick={wallet.connect}
-                                loading={wallet.connecting}
-                                block
-                                wrapClassName={styles.btn}
-                                type="primary"
-                            >
+                            <h2 style={{ color: 'red', marginBottom: 20 }}>{wallet.err}</h2>
+                            <Button onClick={wallet.connect} loading={wallet.connecting} block wrapClassName={styles.btn} type="primary">
                                 Get MetaMask
                             </Button>
                         </>

@@ -20,7 +20,7 @@ interface AccountProps {
 	data: Account | null
 }
 
-const MyAccountPage = ({ isDesktop, isMobile, data }: AccountProps) => {
+const MyAccountPage = ({ isDesktop, isMobile, data }: AccountProps):JSX.Element => {
 	const { email, alias, subscribe, twitter, facebook, about } = data || {}
 	const [status, setStatus] = useState({
 		alias,

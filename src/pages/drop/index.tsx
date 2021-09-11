@@ -40,7 +40,7 @@ const getLeftTime = (time:number):TimeLeft => {
 	};
 }
 
-const DropPage = ({isDesktop, isMobile, title, subtitle, banner, lasttime, arts, ethPrice}: DropPageProp): any => {
+const DropPage = ({isDesktop, isMobile, title, subtitle, banner, lasttime, arts, ethPrice}: DropPageProp):JSX.Element => {
 	const [time, setTime] = React.useState(getLeftTime(lasttime));
 	React.useEffect(() => {
 		setInterval(() => setTime(getLeftTime(lasttime)), 1000)

@@ -17,7 +17,7 @@ interface MyFavoriteProps {
     data: Array<Artwork>
 }
 
-const MyFavoritePage = ({ data }: MyFavoriteProps) => {
+const MyFavoritePage = ({ data }: MyFavoriteProps):JSX.Element => {
   return (
     <Page className={styles.favorite} title={getPageName(PAGE_NAME)}>
       <PageTitle className={styles.title} fontWeight="Bold">

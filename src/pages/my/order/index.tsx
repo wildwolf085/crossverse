@@ -24,7 +24,7 @@ interface MyOrderStatus {
 	bids: Array<OfferWithArt>
 }
 
-const MyOrderPage = ({wons, bids}: MyOrderProps) => {
+const MyOrderPage = ({wons, bids}: MyOrderProps):JSX.Element => {
 	const [status, setStatus] = React.useState<MyOrderStatus>({
 		checked: false,
 		wons, 

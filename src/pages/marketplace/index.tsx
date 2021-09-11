@@ -32,7 +32,7 @@ interface MarketPlaceStatus {
     shareUrl:string
 }
 
-const MarketPlacePage = ({ isDesktop, data, ethPrice }: MarketPlacePageProp) => {
+const MarketPlacePage = ({ isDesktop, data, ethPrice }: MarketPlacePageProp):JSX.Element => {
 	const [status, setStatus] = useState<MarketPlaceStatus>({
 		category: 0,
 		orderBy: 10,
@@ -75,8 +75,6 @@ const MarketPlacePage = ({ isDesktop, data, ethPrice }: MarketPlacePageProp) => 
 		}
 		return 0;
 	})
-	
-
 
 	const onCategory = (category: number) => setStatus({...status, category})
 	const onOrderBy = (orderBy: number) => setStatus({...status, orderBy})
@@ -89,20 +87,10 @@ const MarketPlacePage = ({ isDesktop, data, ethPrice }: MarketPlacePageProp) => 
 				</PageTitle>
 				<Row className={styles.filter} gutter={isDesktop ? 36 : 0}>
 					<Col {...ROW_TWO_ITEMS_XL}>
-						<Select
-							className={styles.select}
-							options={Category}
-							value={status.category}
-							onChange={(value: number) => onCategory(value)}
-						/>
+						<Select className={styles.select} options={Category} value={status.category} onChange={(value: number) => onCategory(value)}/>
 					</Col>
 					<Col {...ROW_TWO_ITEMS_XL}>
-						<Select
-							className={styles.select}
-							options={OrderBy}
-							value={status.orderBy}
-							onChange={(value: number) => onOrderBy(value)}
-						/>
+						<Select className={styles.select} options={OrderBy} value={status.orderBy} onChange={(value: number) => onOrderBy(value)}/>
 					</Col>
 				</Row>
 			</div>
@@ -142,8 +130,6 @@ const MarketPlacePage = ({ isDesktop, data, ethPrice }: MarketPlacePageProp) => 
 export async function getServerSideProps() {
 	const data = await getNftList()
 	const ethPrice = await getETHPrice()
-	return {
-		props: { data, ethPrice }, // will be passed to the page component as props
-	}
+	return {props: { data, ethPrice }}
 }
 export default MarketPlacePage

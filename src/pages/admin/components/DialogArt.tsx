@@ -209,23 +209,11 @@ const DialogArt: React.FC<DialogArtProps> = ({id, d, campaign, onClose, onUpdate
 					</Upload>
 				</Form.Item>
 				<b>Thumbnail (supportted Format: JPG, PNG: Less than 1MB)</b>
-				{/* <div style={{marginBottom:20}}>
-				<Checkbox
-					checked={status.autothumbnail}
-					onChange={(e) =>
-						setStatus({ ...status, autothumbnail: e.target.checked})
-					}
-				>
-					Automatically generate a thumbnail image.
-				</Checkbox>
-				</div>
-				{status.autothumbnail ? null : ( */}
-					<Form.Item className={styles.formItem} rules={[{required: true, message: 'File required'}]}>
-						<Upload listType="picture" action="/api/admin/upload" maxCount={1} fileList={status.thumbnail} onChange={onThumbnailChange} >
-							<Button icon={<UploadOutlined />}>Upload thumbnail</Button>
-						</Upload>
-					</Form.Item>
-				{/* )} */}
+				<Form.Item className={styles.formItem} rules={[{required: true, message: 'File required'}]}>
+					<Upload listType="picture" action="/api/admin/upload" maxCount={1} fileList={status.thumbnail} onChange={onThumbnailChange} >
+						<Button icon={<UploadOutlined />}>Upload thumbnail</Button>
+					</Upload>
+				</Form.Item>
 				<div style={{marginBottom:20}}>
 					<Checkbox checked={data.auction} onChange={(e) =>update('auction', e.target.checked)}>
 						Highest Bid (Auction to the highest bidder)

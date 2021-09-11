@@ -19,12 +19,7 @@ const Nav: React.FC<NavProps> = ({ collapsed, expand }) => {
     const email = session && session[0] && session[0].user && session[0].user.email
     const wallet = useWallet(true);
     return (
-        <div
-            className={classNames(styles[prefixCls], {
-                [styles[`${prefixCls}-collapsed`]]: collapsed,
-                [styles[`${prefixCls}-expand`]]: collapsed && expand,
-            })}
-        >
+        <div className={classNames(styles[prefixCls], {[styles[`${prefixCls}-collapsed`]]: collapsed, [styles[`${prefixCls}-expand`]]: collapsed && expand})}>
             <ul className={styles[`${prefixCls}-nav`]}>
                 <li className={styles[`${prefixCls}-nav-item`]}>
                     <Link href="/">Home</Link>
@@ -41,9 +36,7 @@ const Nav: React.FC<NavProps> = ({ collapsed, expand }) => {
                 <li className={styles[`${prefixCls}-divider`]} />
                 {isSigned ? (
                     <li className={styles[`${prefixCls}-nav-item`]}>
-                        <Link href="/wallet/connect">{
-                            wallet.connected ? '🦊 ' + wallet.address.slice(0,6)+'...'+wallet.address.slice(-4) : (wallet.connecting?'🦊 connecting...':'🦊 connect wallet')
-                        }</Link>
+                        <Link href="/wallet/connect">{wallet.connected ? '🦊 ' + wallet.address.slice(0,6)+'...'+wallet.address.slice(-4) : (wallet.connecting?'🦊 connecting...':'🦊 connect wallet')}</Link>
                     </li>
                 ) : null}
                 {isSigned ? (

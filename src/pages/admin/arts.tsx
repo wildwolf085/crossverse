@@ -20,7 +20,7 @@ interface AdminStatus {
 
 const PAGE_NAME = 'NFT Manager'
 
-const AdminPage = ( { arts, ethPrice, campaign }: AdminProps) => {
+const AdminPage = ( { arts, ethPrice, campaign }: AdminProps):JSX.Element => {
 	const [status, setStatus] = React.useState<AdminStatus>({
 		loading: false,
 		arts

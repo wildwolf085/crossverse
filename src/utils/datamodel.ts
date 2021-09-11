@@ -2,7 +2,7 @@ import JSBI from 'jsbi'
 import sizeOf from 'image-size'
 import sharp from 'sharp'
 import { Storage } from '@google-cloud/storage'
-import Model from './model'
+import MySQLModel from './MySQLModel'
 import { call, hash, now, generateCode, fromEther, toEther } from './helper'
 import { Html_Register } from './email-template'
 import gmail from './gmail'
@@ -27,18 +27,18 @@ const signer = '0xCcC2fcaeeA78A87e002ab8fEFfd23eedc19CDE07'
 
 const web3 = new Web3(conf.rpc)
 
-const Nfts = new Model('nfts')
-const Arts = new Model('arts')
-const Artviews = new Model('artviews')
-const Artlikes = new Model('artlikes')
-const Users = new Model('users')
-const Wallets = new Model('wallets', 'key')
-const Userlog = new Model('userlog')
-const Authcodes = new Model('authcodes', 'email')
-const Trades = new Model('trades')
-const Offers = new Model('offers', 'txid')
-const Txs = new Model('txs', 'txid')
-const Campaigns = new Model('campaigns')
+const Nfts = new MySQLModel('nfts')
+const Arts = new MySQLModel('arts')
+const Artviews = new MySQLModel('artviews')
+const Artlikes = new MySQLModel('artlikes')
+const Users = new MySQLModel('users')
+const Wallets = new MySQLModel('wallets', 'key')
+const Userlog = new MySQLModel('userlog')
+const Authcodes = new MySQLModel('authcodes', 'email')
+const Trades = new MySQLModel('trades')
+const Offers = new MySQLModel('offers', 'txid')
+const Txs = new MySQLModel('txs', 'txid')
+const Campaigns = new MySQLModel('campaigns')
 
 const { serverRuntimeConfig } = getConfig()
 
@@ -64,7 +64,7 @@ export const setlog = (msg: string | Error | null = null): void => {
 		const timetext: string = [ ('0' + hh).slice(-2), ('0' + mm).slice(-2), ('0' + ss).slice(-2), ].join(':')
 		if (msg instanceof Error) msg = msg.stack || msg.message
 		const bStart = 0
-		if (msg) msg = msg.split(/\r\n|\r|\n/g).map((v) => '\t' + v).join('')
+		/* if (msg) msg = msg.split(/\r\n|\r|\n/g).map((v) => '\t' + v).join('') */
 		const text = `[${timetext}] ${msg === null ? '' : msg + '\r\n'}`
 		fs.appendFileSync(logPath + '/' + datetext + '.log', (bStart ? '\r\n\r\n\r\n' : '') + text)
 		if (process.env.NODE_ENV !== 'production') console.log(text)
@@ -73,10 +73,16 @@ export const setlog = (msg: string | Error | null = null): void => {
 	}
 }
 
-const initialize = async (): Promise<any> => {
-	if (!Model.db) await Model.connect()
-	if (!global.inited) {
-		global.inited = true
+const initialize = async (): Promise<void> => {
+	if (!MySQLModel.db) {
+		console.log('connecting Database...')
+		await MySQLModel.connect({
+			host: process.env.DB_HOST,
+			port: Number(process.env.DB_PORT),
+			user: process.env.DB_USER,
+			password: process.env.DB_PASS,
+			database: process.env.DB_NAME,
+		})
 		global.lastCheckTime = 0
 		global.users = {}
 		let rows: any = await Users.find({ alias: { $ne: null } })
@@ -133,9 +139,6 @@ const artwork = (v: any): Artwork => {
 }
 
 const updateGlobalUser = (data: User): void => {
-	/* const v: any = global.users[data.id] */
-	/* if (v && global.alias[v.alias] !== undefined) delete global.alias[v.alias]
-	if (data.alias !== '') global.alias[data.alias] = data.id */
 	global.users[data.id] = data
 }
 
@@ -154,16 +157,8 @@ const uploadToGCP = (filename: string, buffer: any) => {
 		try {
 			const blob = bucket.file(filename)
 			const blobStream = blob.createWriteStream({ resumable: false })
-
-			blobStream.on('error', (err) => {
-				resolve({ err: err.message })
-			})
-
-			blobStream.on('finish', () => {
-				resolve(
-					`https://storage.googleapis.com/${bucket.name}/${blob.name}`
-				)
-			})
+			blobStream.on('error', (err) => resolve({ err: err.message }))
+			blobStream.on('finish', () => resolve(`https://storage.googleapis.com/${bucket.name}/${blob.name}`))
 			blobStream.end(buffer)
 		} catch (err:any) {
 			resolve({ err: `Could not upload the file: ${filename}. ${err}` })
@@ -294,19 +289,8 @@ export const checktxs = async (): Promise<boolean> => {
 			const json = []
 			let k = 0
 			for (const v of rows) {
-				txs[k] = {
-					txid: v.txid,
-					from: v.from,
-					uid: v.uid,
-					to: v.to,
-					created: v.created,
-				}
-				json.push({
-					jsonrpc: '2.0',
-					method: 'eth_getTransactionReceipt',
-					params: [v.txid],
-					id: k,
-				})
+				txs[k] = {txid: v.txid, from: v.from, uid: v.uid, to: v.to, created: v.created}
+				json.push({jsonrpc: '2.0', method: 'eth_getTransactionReceipt', params: [v.txid], id: k})
 				k++
 			}
 			const results = await call(conf.rpc, json)
@@ -496,13 +480,9 @@ export const getAssets = async (uid: number): Promise<Array<Artwork>> => {
 	const result: Array<Artwork> = []
 	try {
 		await initialize()
-		// const { users } = global
-		const address = '' // users[uid] && users[uid].address
+		const address = ''
 		if (address) {
-			const contract = new web3.eth.Contract(
-				<any>abiStorefront,
-				conf.storefront
-			)
+			const contract = new web3.eth.Contract(<any>abiStorefront, conf.storefront)
 			const res = await contract.methods.assetsByAccount(address).call()
 			if (res) {
 				const count = Number(res)
@@ -512,9 +492,7 @@ export const getAssets = async (uid: number): Promise<Array<Artwork>> => {
 				while (start < count) {
 					let end = start + 1000
 					if (end >= count) end = count
-					const assets = await contract.methods
-						.assetsByAccount(address, start, end - 1)
-						.call()
+					const assets = await contract.methods.assetsByAccount(address, start, end - 1).call()
 					if (assets && Array.isArray(assets)) {
 						for (const v of assets) {
 							const tokenid = Number(v[0])
@@ -529,14 +507,9 @@ export const getAssets = async (uid: number): Promise<Array<Artwork>> => {
 				}
 				if (ids.length) {
 					let rows: any = await Nfts.find({ uid })
-					const assets: {
-						[id: number]: { id: number; balance: number }
-					} = {}
+					const assets: {[id: number]: {id:number, balance: number}} = {}
 					for (const v of rows) {
-						assets[v.tokenid] = {
-							id: v.id,
-							balance: v.balance,
-						}
+						assets[v.tokenid] = {id:v.id, balance:v.balance}
 					}
 					rows = await Arts.find({ id: ids })
 					if (rows) {
@@ -547,21 +520,10 @@ export const getAssets = async (uid: number): Promise<Array<Artwork>> => {
 							const balance = tokens[art.id]
 							if (assets[v.id] !== undefined) {
 								if (assets[v.id].balance !== balance) {
-									updates.push({
-										id: assets[v.id].id,
-										balance,
-									})
+									updates.push({id: assets[v.id].id, balance})
 								}
 							} else {
-								inserts.push({
-									uid,
-									tokenid: art.id,
-									seller: null,
-									price: fromEther(art.price),
-									balance,
-									status: 0,
-									created: now(),
-								})
+								inserts.push({uid, tokenid: art.id, seller: null, price: fromEther(art.price), balance, status: 0, created: now()})
 							}
 							result.push({ ...art, balance })
 						}
@@ -662,12 +624,9 @@ export const updateNewNFT = async ({ tokenid, store, author, worknumber, categor
 	try {
 		await initialize()
 		let row = await Users.findOne({alias:author})
-		/* const { arts } = global
-		const uid = global.alias[author] */
 		if (row) {
 			const uid = row.id;
 			row = await Arts.findOne(tokenid)
-			/* const url = 'https://storage.googleapis.com/crossverse/' */
 			const old = row ? artwork(row) : null
 			const isUpdate = old !== null
 			const created = now()
@@ -704,8 +663,7 @@ export const updateNewNFT = async ({ tokenid, store, author, worknumber, categor
 				const tempfile = temp + '/tmp_' + thumbnailfile.fileid + '.webp'
 				try {
 					const dims: any = sizeOf(orgfile)
-					let w = dims.width,
-						h = dims.height
+					let w = dims.width, h = dims.height
 					const rx = dims.width / 400
 					const ry = dims.height / 400
 					if (rx > 1 || ry > 1) {
@@ -741,36 +699,7 @@ export const updateNewNFT = async ({ tokenid, store, author, worknumber, categor
 			}
 			await Arts.insertOrUpdate(v)
 			if (!isUpdate) {
-				await Trades.insert({
-					uid,
-					tokenid,
-					event: 0,
-					price,
-					quantity: balance,
-					from: uid,
-					to: 0,
-					created
-				})
-				/* global.arts[tokenid] = artwork(v)
-				if (tokenid > global.lastTokenId) global.lastTokenId = tokenid
-			} else {
-				const user = global.users[uid]
-				old.store = store
-				old.author = user.alias
-				old.aboutAuthor = user.about
-				old.worknumber = worknumber
-				old.category = category
-				old.title = name
-				old.description = description
-				old.price = toEther(price)
-				old.auction = auction
-				old.auctiontime = auctiontime
-				if (auction) {
-					old.totalsupply = 1
-					old.instock = 1
-				}
-				if (v.file) old.file = url + v.file
-				if (v.thumbnail) old.thumbnail = url + v.thumbnail */
+				await Trades.insert({uid, tokenid, event: 0, price, quantity: balance, from: uid, to: 0, created})
 			}
 			return {status: 'ok'}
 		} else {
@@ -783,14 +712,8 @@ export const updateNewNFT = async ({ tokenid, store, author, worknumber, categor
 export const updateArtSupply = async ( tokenid: number, quantity: number ): Promise<ApiResponse> => {
 	try {
 		await initialize()
-		/* const { arts } = global
-		const art = arts[tokenid]
-		if (art) {
-			art.totalsupply += quantity
-			art.instock += quantity */
-			await Arts.update(tokenid, { totalsupply:{$ad:quantity}, instock: {$ad:quantity}})
-			return {status: 'ok'}
-		/* } */
+		await Arts.update(tokenid, { totalsupply:{$ad:quantity}, instock: {$ad:quantity}})
+		return {status: 'ok'}
 	} catch (err:any) {
 		setlog(err)
 	}
@@ -809,8 +732,7 @@ export const updateCampaign = async ({ title, subtitle, lasttime, file }: Campai
 			const tempfile2 = temp + '/upload_' + filename
 			try {
 				const dims: any = sizeOf(tempfile)
-				let w = dims.width,
-					h = dims.height
+				let w = dims.width, h = dims.height
 				const rx = dims.width / 1600
 				const ry = dims.height / 625
 				if (rx > 1 || ry > 1) {
@@ -931,31 +853,24 @@ export const getMyTokens = async (uid: number, id: number): Promise<number> => {
 export const getOfferById = async ( txid: string ): Promise<OfferWithArt | null> => {
 	try {
 		await initialize()
-		const { users } = global
-		/* const { users, arts } = global */
+		const {users} = global
 		const v: any = await Offers.findOne(txid)
-
 		if (v) {
 			const user = users[v.uid]
 			const row = await Arts.findOne(v.tokenid)
 			if (user && row) {
-
-				/* const art = arts[v.tokenid]
-				const user = users[v.uid] */
-				/* if (art && user) { */
-					return {
-						tokenid: v.tokenid,
-						ownerid:v.uid,
-						txid,
-						from: user.alias,
-						buyer: v.buyer,
-						price: toEther(v.price),
-						quantity: v.quantity,
-						amount: toEther(v.amount),
-						status: v.status,
-						created: v.created,
-					}
-				/* } */
+				return {
+					tokenid: v.tokenid,
+					ownerid:v.uid,
+					txid,
+					from: user.alias,
+					buyer: v.buyer,
+					price: toEther(v.price),
+					quantity: v.quantity,
+					amount: toEther(v.amount),
+					status: v.status,
+					created: v.created,
+				}
 			}
 		}
 	} catch (err:any) {
@@ -964,18 +879,12 @@ export const getOfferById = async ( txid: string ): Promise<OfferWithArt | null>
 	return null
 }
 
-const getOffers = async (
-	uid: number,
-	where: string | ModelWhere,
-	limit: number
-): Promise<Array<OfferWithArt>> => {
+const getOffers = async (uid: number, where: string | ModelWhere, limit: number): Promise<Array<OfferWithArt>> => {
 	const result: Array<OfferWithArt> = []
 	try {
 		await initialize()
 		const { users } = global
-		const rows: any = await Offers.find(where, { created: -1 }, null, {
-			limit,
-		})
+		const rows: any = await Offers.find(where, { created: -1 }, null, {limit})
 		if (rows) {
 			for (const v of rows) {
 				const user = users[v.uid]
@@ -991,7 +900,7 @@ const getOffers = async (
 						amount: toEther(v.amount),
 						status: v.status,
 						created: v.created,
-						mine: v.uid === uid,
+						mine: v.uid === uid
 					})
 				}
 			}
@@ -1013,9 +922,7 @@ export const getOffersWons = async ( uid: number ): Promise<Array<OfferWithArt>>
 	return await getOffers(uid, { uid, won:1 }, 100)
 }
 
-export const getTradeHistory = async (
-	tokenid: number
-): Promise<Array<Trade>> => {
+export const getTradeHistory = async (tokenid: number): Promise<Array<Trade>> => {
 	const result: Array<Trade> = []
 	try {
 		await initialize()
@@ -1044,22 +951,12 @@ export const getCampaign = async (): Promise<Campaigns> => {
 		await initialize()
 		const v = await Campaigns.findOne({}, { id: -1 })
 		if (v) {
-			return {
-				title: v.title || '',
-				subtitle: v.subtitle || '',
-				banner: v.banner || '',
-				lasttime: v.lasttime || '',
-			}
+			return {title: v.title || '', subtitle: v.subtitle || '', banner: v.banner || '', lasttime: v.lasttime || ''}
 		}
 	} catch (err:any) {
 		setlog(err)
 	}
-	return {
-		title: '',
-		subtitle: '',
-		banner: '',
-		lasttime: 0,
-	}
+	return {title: '',subtitle: '',banner: '',lasttime: 0}
 }
 
 export const getDrops = async (): Promise<Array<Artwork>> => {
@@ -1100,16 +997,7 @@ export const getNftById = async (id: number): Promise<Artwork | null> => {
 			const row = await Arts.findOne(v.tokenid);
 			if (row) {
 				const art = artwork(row)
-				return {
-					...art,
-					ownerid: v.uid,
-					owner: users[v.uid].alias,
-					ownerAddress: v.buyer,
-					price: toEther(v.price),
-					sellPrice: toEther(v.sellprice),
-					balance: v.balance,
-					sellBalance: v.sellbalance
-				}
+				return {...art, ownerid: v.uid, owner: users[v.uid].alias, ownerAddress: v.buyer, price: toEther(v.price), sellPrice: toEther(v.sellprice), balance: v.balance, sellBalance: v.sellbalance}
 			}
 		}
 	} catch (err:any) {
@@ -1123,7 +1011,7 @@ const getNfts = async (where: string | ModelWhere, limit: number, uid?: number):
 	try {
 		await initialize()
 		const { users } = global
-		const rows = await (typeof where === 'string' ? Model.exec(where) : Nfts.find( { ...where, balance: { $ne: 0 } }, { created: -1 }, null, { limit }))
+		const rows = await (typeof where === 'string' ? MySQLModel.exec(where) : Nfts.find( { ...where, balance: { $ne: 0 } }, { created: -1 }, null, { limit }))
 		if (rows) {
 			let ps:any = {};
 			for (let row of rows) {
@@ -1141,14 +1029,7 @@ const getNfts = async (where: string | ModelWhere, limit: number, uid?: number):
 			for (const row of rows) {
 				const v = arts[row.tokenid]
 				if (v) {
-					const val = {
-						...v,
-						owner: (users[row.uid] && users[row.uid].alias) || '',
-						ownerAddress: row.buyer,
-						ownerid: row.id,
-						price: toEther(row.price),
-						balance: row.balance || 0,
-					}
+					const val = {...v, owner: (users[row.uid] && users[row.uid].alias) || '', ownerAddress: row.buyer, ownerid: row.id, price: toEther(row.price), balance: row.balance || 0, }
 					if (row.status === 100) {
 						val.sellPrice = toEther(row.sellprice)
 						val.sellBalance = row.sellbalance || 0
@@ -1166,19 +1047,12 @@ const getNfts = async (where: string | ModelWhere, limit: number, uid?: number):
 }
 
 export const getListings = async (tokenid: number,uid: number): Promise<Array<Artwork>> => {
-	return await getNfts(
-		{ tokenid, status: 100, sellbalance: { $ne: 0 } },
-		100,
-		uid
-	)
+	return await getNfts({ tokenid, status: 100, sellbalance: { $ne: 0 } }, 100, uid)
 }
 
 export const addlist = async (tokenid: number, uid: number, address: string, price: number, quantity: number): Promise<boolean> => {
 	try {
-		const result = await Nfts.update(
-			{ uid, tokenid, buyer: address, balance: { $gt: quantity - 1 } },
-			{ status: 1, sellprice: fromEther(price), sellbalance: quantity }
-		)
+		const result = await Nfts.update({uid, tokenid, buyer: address, balance: {$gt: quantity - 1}}, {status: 1, sellprice: fromEther(price), sellbalance: quantity})
 		return result !== null
 	} catch (err:any) {
 		setlog(err)
@@ -1188,10 +1062,7 @@ export const addlist = async (tokenid: number, uid: number, address: string, pri
 
 export const delist = async (uid: number): Promise<boolean> => {
 	try {
-		const result = await Nfts.update(
-			{ uid },
-			{ status: 0, sellprice: 0, sellbalance: 0, listed: 0 }
-		)
+		const result = await Nfts.update({uid}, {status:0, sellprice:0, sellbalance:0, listed:0})
 		return result !== null
 	} catch (err:any) {
 		setlog(err)
@@ -1207,10 +1078,7 @@ export const getResales = async (): Promise<Array<Artwork>> => {
 	return await getNfts({ seller: { $ne: null } }, 20)
 }
 
-export const getPurchased = async (
-	uid: number,
-	limit?: number
-): Promise<Array<Artwork>> => {
+export const getPurchased = async (uid: number, limit?: number): Promise<Array<Artwork>> => {
 	return await getNfts({ uid }, limit || 100)
 }
 
@@ -1240,15 +1108,7 @@ export const getAccount = async (uid: number): Promise<Account | null> => {
 		const user = await Users.findOne(uid)
 		if (user) {
 			const wallets = await Wallets.find({ uid })
-			return {
-				email: user.email,
-				alias: user.alias,
-				subscribe: user.subscribe === 1,
-				twitter: user.twitter,
-				facebook: user.facebook,
-				about: user.about,
-				wallets: wallets ? wallets.map((v: any) => v.key) : [],
-			}
+			return {email: user.email, alias: user.alias, subscribe: user.subscribe === 1, twitter: user.twitter, facebook: user.facebook, about: user.about, wallets: wallets ? wallets.map((v: any) => v.key) : []}
 		}
 	} catch (err:any) {
 		setlog(err)
@@ -1260,22 +1120,7 @@ export const setAccount = async ( uid: number, alias: string, about: string, sub
 	try {
 		await initialize()
 		if (global.users[uid]) {
-			/* const oldAlias = global.users[uid].alias
-			for (const k in global.arts) {
-				const v = global.arts[k]
-				if (v.author === '@' + oldAlias) {
-					v.author = '@' + alias
-					v.aboutAuthor = about
-				}
-			} */
-			await Users.update(uid, {
-				alias,
-				about,
-				subscribe: subscribe ? 1 : 0,
-				twitter,
-				facebook,
-				updated: now(),
-			})
+			await Users.update(uid, {alias, about, subscribe: subscribe ? 1 : 0, twitter, facebook, updated: now()})
 			updateGlobalUser({ ...global.users[uid], alias, about })
 			return true
 		}
@@ -1316,7 +1161,6 @@ export const setMyWallet = async ( uid: number, address: string ): Promise<strin
 			return `🦊 [${ address.slice(0, 6) + '...' + address.slice(-4) }] already in use by someone`
 		}
 		await Wallets.insert({ key: address, uid })
-		/* wallets[address] = uid */
 		return null
 	} catch (err:any) {
 		return err.message

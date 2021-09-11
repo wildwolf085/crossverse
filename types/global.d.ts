@@ -9,20 +9,6 @@ declare namespace NodeJS  {
 			updated:number
 		}
 		lastCheckTime:number
-		/* 
-		
-		alias: {
-			[k:string]:number
-		}
-		wallets: {
-			[k:string]:number
-		}
-		arts: {
-			[id:number]:Artwork
-		}
-		lastTokenId:number
-		lastArtId:number */
-		/* store:any */
 	}
 }
 declare interface ReducerState {
@@ -36,12 +22,9 @@ declare interface ReducerState {
 	err:string
 }
 
-declare interface ModelWhere {
-	[key:string]:string|number|null|{[key:string]:string|number|null}
-}
+
 
 declare interface Window  {
-	/* connector: IConnector */
 	ethereum: any
 	Web3: any
 }
@@ -165,10 +148,9 @@ declare interface Offer {
 	created:number
 }
 declare interface OfferWithArt {
-	ownerid:number
-	txid:string
-	tokenid:number
-	/* art: Artview */
+	ownerid: number
+	txid: string
+	tokenid: number
 	from: string
 	buyer: string
 	price: number
@@ -196,28 +178,27 @@ declare interface Account {
 	wallets:Array<string>
 }
 
-
 declare interface ComponentBase {
 	className?: string
 }
 
-
 interface CONFIG {
 	[chainid: number]: NETWORKCONFIG
-  }
+}
   
-  interface NETWORKCONFIG {
-	  title: string
-	  rpc: string
-	  explorer: string
-	  blocktime: number
-	  confirmations:number
-	  storefront: string
-	  weth: {
-		  contract: string
-		  precision: number
-	  }
-  }
+interface NETWORKCONFIG {
+	title: string
+	rpc: string
+	explorer: string
+	blocktime: number
+	confirmations:number
+	storefront: string
+	weth: {
+		contract: string
+		precision: number
+	}
+}
+
 declare type SendTxResult = {
 	success:boolean
 	tx?: Transaction

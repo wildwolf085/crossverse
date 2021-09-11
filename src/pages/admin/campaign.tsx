@@ -18,7 +18,7 @@ interface CampaignPageProps {
 	lasttime: number
 }
 
-const CampaignPage = ({title, subtitle, lasttime}: CampaignPageProps) => {
+const CampaignPage = ({title, subtitle, lasttime}: CampaignPageProps):JSX.Element => {
 	const [form] = Form.useForm()
 	const [status, setStatus] = React.useState({
 		loading: false,

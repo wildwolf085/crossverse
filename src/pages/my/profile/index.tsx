@@ -9,10 +9,7 @@ import Page from '@/components/Page'
 import PageTitle from '@/components/Page/Title'
 import More from '@/components/More'
 import { ROW_TWO_ITEMS_XL } from '@/config'
-/* import { getOrderStatusText } from '@/utils/enums' */
 import { offsetDate } from '@/utils/helper'
-/* import mockSales from '@/mock/sales.json' */
-/* import mockTransactions from '@/mock/transcation.json' */
 import styles from './index.module.scss'
 import { getPurchased, getOffersByUID, getTxs, getOffersWons } from '@/utils/datamodel'
 
@@ -32,72 +29,11 @@ interface ProfilePageStatus {
 }
 
 
-const ProfilePage = ({isDesktop, isMobile, my, offers, wons, txs}: ProfilePageProps) => {
+const ProfilePage = ({isDesktop, isMobile, my, offers, wons, txs}: ProfilePageProps):JSX.Element => {
 	const [status] = React.useState<ProfilePageStatus>({
 		loading:{}
 	})
 
-	/* const transactionColumns = [
-		{
-			title: 'From',
-			key: 'from',
-			dataIndex: 'from',
-			render: (text: string) => (
-				<Tooltip title={text}>
-					<div className={classNames(styles.clipAddress, 'text-truncate')}>
-						{text}
-					</div>
-				</Tooltip>
-			),
-		},
-		{
-			title: 'To',
-			key: 'to',
-			dataIndex: 'to',
-			render: (text: string) => (
-				<Tooltip title={text}>
-					<div className={classNames(styles.clipAddress, 'text-truncate')}>
-						{text}
-					</div>
-				</Tooltip>
-			),
-		},
-		{
-			title: 'Date',
-			key: 'date',
-			dataIndex: 'time',
-		},
-		{
-			title: 'Status',
-			key: 'status',
-			dataIndex: 'status',
-			render: (text: string) => (
-				<span className={renderStatus(text)}>{text}</span>
-			),
-		},
-	] */
-
-	/* const renderExtra = (status: number) => {
-		const text = getOrderStatusText(status)
-
-		return <div className={renderStatus(text)}>{text}</div>
-	} */
-
-	/* const renderStatus = (type?: string) => {
-		if (type === 'Completed') {
-			return 'text-status-primary'
-		}
-
-		if (type === 'Cancelled') {
-			return 'text-status-disabled'
-		}
-
-		if (type === 'Expired') {
-			return 'text-status-disabled'
-		}
-
-		return ''
-	} */
 	const columns = [
         {
             title: 'From',
@@ -165,32 +101,22 @@ const ProfilePage = ({isDesktop, isMobile, my, offers, wons, txs}: ProfilePagePr
 	return (
 		<Page className={styles.profile} title={PAGE_NAME}>
 			<div className={styles.head}>
-				<PageTitle
-					className={classNames(styles.title, styles.paddingTitle)}
-					fontWeight="Bold"
-				>
+				<PageTitle className={classNames(styles.title, styles.paddingTitle)} fontWeight="Bold">
 					{PAGE_NAME}
 				</PageTitle>
 			</div>
 			<div className={styles.body}>
 				<div className={styles.purchased}>
-					<PageTitle className={classNames(styles.titleWithLink, styles.titlePadding)} fontWeight="Bold" >
+					<PageTitle className={classNames(styles.titleWithLink, styles.titlePadding)} fontWeight="Bold">
 						<div>My Purchased NFTs</div>
 						<More className={styles.titleExtra} href="/my/purchased">
 							See all
 						</More>
 					</PageTitle>
-					<CarouselArtwork
-						className={styles.purchasedList}
-						isMobile={isMobile}
-						dataSource={my.map(v => ({ ...v }))}
-					/>
+					<CarouselArtwork className={styles.purchasedList} isMobile={isMobile} dataSource={my.map(v => ({ ...v }))} />
 				</div>
 				<div className={styles.order}>
-					<PageTitle
-						className={classNames(styles.titleWithLink, styles.titlePadding)}
-						fontWeight="Bold"
-					>
+					<PageTitle className={classNames(styles.titleWithLink, styles.titlePadding)} fontWeight="Bold">
 						<div>My Orders</div>
 						<More className={styles.titleExtra} href="/my/order">
 							See all
@@ -199,19 +125,6 @@ const ProfilePage = ({isDesktop, isMobile, my, offers, wons, txs}: ProfilePagePr
 					<Row className={styles.orderList} gutter={isDesktop ? 36 : 0}>
 						<Col {...ROW_TWO_ITEMS_XL}>
 							<h2>Won Auctions</h2><hr />
-							{/* {wons.map(v => (
-								<ArtworkCard
-									key={v.txid}
-									artist={v.author}
-									name={v.title}
-									priceALT={v.price}
-									priceFIAT={v.price * ethPrice}
-									thumbnail={v.thumbnail}
-									href={getViewURL(v.id)}
-									extra={renderExtra(ORDER_STATUS.COMPLETED)}
-								/>
-							))} */}
-
 							{wons.length ? <table>
 								<thead>
 									<tr>
@@ -331,16 +244,7 @@ const ProfilePage = ({isDesktop, isMobile, my, offers, wons, txs}: ProfilePagePr
 						{txs.length ? <More className={styles.titleExtra} href="/my/transaction">See all</More> : null}
 						
 					</PageTitle>
-					{txs.length ? 
-						<Table
-							scroll={isMobile ? { x: 1500 } : {}}
-							bordered={false}
-							columns={columns}
-							dataSource={txs}
-							pagination={false}
-							rowKey="id"
-						/>
-					: (
+					{txs.length ? <Table scroll={isMobile ? { x: 1500 } : {}} bordered={false} columns={columns} dataSource={txs} pagination={false} rowKey="id" /> : (
 						<div style={{ textAlign: 'center' }}>
 							<img src="/images/empty-bids.svg" width={156} height={114} alt="empty offers" />
 							<div>No transactions yet</div>
