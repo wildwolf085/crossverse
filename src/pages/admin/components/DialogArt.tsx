@@ -13,6 +13,7 @@ export interface DialogArtProps {
 	id: number,
 	d: AdminArt
 }
+
 interface DialogArtStatus {
 	loading: boolean
 	supplyvisible: boolean
@@ -63,7 +64,6 @@ const DialogArt: React.FC<DialogArtProps> = ({id, d, campaign, onClose, onUpdate
 	const refName = React.useRef<Input>(null)
 	const refDescription = React.useRef<HTMLTextAreaElement>(null)
 	const refPrice = React.useRef<Input>(null)
-
 
 	const update = (field:string, value:string|number|boolean) => {
 		setData({...data, [field]:value})
@@ -201,7 +201,6 @@ const DialogArt: React.FC<DialogArtProps> = ({id, d, campaign, onClose, onUpdate
 				<Form.Item className={styles.item} rules={[{required: true, message: 'Description required'}]}>
 					<Input.TextArea ref={refDescription} placeholder="Description" value={ data.description } onChange={ (e) =>update('description', e.target.value) }/>
 				</Form.Item>
-				
 				<b>Supportted Format: JPG, PNG, GIF, MP3, MP4: Less than 20MB</b>
 				<Form.Item className={styles.item} rules={[{required: true, message: 'File required'}]}>
 					<Upload action="/api/admin/upload" maxCount={1} fileList={ status.fileList } onChange={onFileChange}>
@@ -281,7 +280,7 @@ const DialogArt: React.FC<DialogArtProps> = ({id, d, campaign, onClose, onUpdate
 					</Button>,
 					<Button key="back" onClick={onSupplyCancel}>
 						CANCEL
-					</Button>,
+					</Button>
 				]}
 			>
 				<input value={status.quantity} onChange={e=>setStatus({...status, quantity:Number(e.target.value)})} />
