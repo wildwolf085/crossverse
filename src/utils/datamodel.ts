@@ -207,7 +207,7 @@ export const getETHPrice = async (): Promise<number> => {
 		}
 		return global.eth.price
 	} catch (err:any) {
-		setlog(err)
+		setlog('api.binance.com did not response.')
 	}
 	return 0
 }
