@@ -64,7 +64,6 @@ export const setlog = (msg: string | Error | null = null): void => {
 		const timetext: string = [ ('0' + hh).slice(-2), ('0' + mm).slice(-2), ('0' + ss).slice(-2), ].join(':')
 		if (msg instanceof Error) msg = msg.stack || msg.message
 		const bStart = 0
-		/* if (msg) msg = msg.split(/\r\n|\r|\n/g).map((v) => '\t' + v).join('') */
 		const text = `[${timetext}] ${msg === null ? '' : msg + '\r\n'}`
 		fs.appendFileSync(logPath + '/' + datetext + '.log', (bStart ? '\r\n\r\n\r\n' : '') + text)
 		if (process.env.NODE_ENV !== 'production') console.log(text)
@@ -378,9 +377,9 @@ const buy = async ( uid: number, tokenid:number, price: number, quantity: number
 			if (pid.length === 66) {
 				const row = await Offers.findOne(pid)
 				if (row.quantity > quantity) {
-					await Offers.update(pid, { quantity: row.quantity - quantity, amount: (row.quantity - quantity) * row.price })
+					await Offers.update(pid, {quantity: row.quantity - quantity, amount: (row.quantity - quantity) * row.price})
 				} else {
-					await Offers.update(pid, { quantity: 0, amount: 0, status: 100 })
+					await Offers.update(pid, {quantity: 0, amount: 0, status: 100})
 				}
 				sellerid = uid
 				uid = row.uid
@@ -392,10 +391,11 @@ const buy = async ( uid: number, tokenid:number, price: number, quantity: number
 				} else {
 					art.instock = 0
 				}
-				await Arts.update(art.id, { instock: art.instock })
+				await Arts.update(art.id, {instock:art.instock})
 			} else {
 				const row = await Nfts.findOne( pid === '0' ? { tokenid: art.id, uid: sellerid, buyer: seller } : Number(pid) )
 				if (row) {
+					sellerid = row.uid;
 					const data: any = { updated: created }
 					data.balance = row.balance - quantity
 					if (data.balance <= 0) {
@@ -435,7 +435,6 @@ const buy = async ( uid: number, tokenid:number, price: number, quantity: number
 
 const transfer = async ( from: string, to: string, tokenid: number, quantity: number, created: number ): Promise<void> => {
 	try {
-		/* const { wallets } = global */
 		let senderid = 0, receiverid = 0, senderPrice = 0
 		const sender = await Nfts.findOne({ tokenid, buyer: from })
 		if (sender) {
@@ -1011,6 +1010,7 @@ const getNfts = async (where: string | ModelWhere, limit: number, uid?: number):
 	try {
 		await initialize()
 		const { users } = global
+		
 		const rows = await (typeof where === 'string' ? MySQLModel.exec(where) : Nfts.find( { ...where, balance: { $ne: 0 } }, { created: -1 }, null, { limit }))
 		if (rows) {
 			let ps:any = {};
@@ -1029,7 +1029,7 @@ const getNfts = async (where: string | ModelWhere, limit: number, uid?: number):
 			for (const row of rows) {
 				const v = arts[row.tokenid]
 				if (v) {
-					const val = {...v, owner: (users[row.uid] && users[row.uid].alias) || '', ownerAddress: row.buyer, ownerid: row.id, price: toEther(row.price), balance: row.balance || 0, }
+					const val = {...v, owner: (users && users[row.uid] && users[row.uid].alias) || '', ownerAddress: row.buyer, ownerid: row.id, price: toEther(row.price), balance: row.balance || 0, }
 					if (row.status === 100) {
 						val.sellPrice = toEther(row.sellprice)
 						val.sellBalance = row.sellbalance || 0
