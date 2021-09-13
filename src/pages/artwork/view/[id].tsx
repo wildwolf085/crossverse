@@ -136,7 +136,7 @@ const ViewPage = ({ isDesktop, logged, art, listings, offers, trades, ethPrice, 
         })
         averagePrice = sum / offers.length
     }
-    
+    trades.sort((a,b)=>a.created-b.created);
     trades.map((v: any) => {
         if (v.price && v.eid != 0) {
             const iOffset = 8
@@ -147,7 +147,7 @@ const ViewPage = ({ isDesktop, logged, art, listings, offers, trades, ethPrice, 
             ys.push(v.price)
         }
     })
-
+    trades.sort((a,b)=>b.created-a.created);
     let hasList = false
 
     for (const v of status.listings) {
@@ -448,7 +448,7 @@ const ViewPage = ({ isDesktop, logged, art, listings, offers, trades, ethPrice, 
                                                         {v.sellBalance || 0}
                                                     </td>
                                                     <td style={{ textAlign: 'center' }} >
-                                                        {offsetDate( v.created, 0 )}
+                                                        {offsetDate( v.listed, 0 )}
                                                     </td>
                                                 </tr>
                                             ))}

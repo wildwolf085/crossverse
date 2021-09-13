@@ -116,7 +116,7 @@ const artwork = (v: any): Artwork => {
 		category: v.category,
 		title: v.name,
 		author: user ? '@' + user.alias : '-',
-		aboutAuthor: user.about || '',
+		aboutAuthor: user && user.about || '',
 		description: v.description || '',
 		worknumber: v.worknumber || 0,
 		file: `${url}/${v.file}`,
@@ -1177,6 +1177,9 @@ export const wonInAuction = async (tokenid:number): Promise<void> => {
 			const txid = await callBySigner( conf.storefront, abiStorefront, 'setAuctionWinner', tokenid, toHex(won.price * 1e12), won.quantity, toHex(won.price * won.quantity * 1e12), won.buyer )
 			if (txid) await Txs.insert({ txid, uid: won.uid, from: signer, to: conf.storefront, status: 0, created })
 			await Offers.update(won.id, {status:100, won:1})
+			await Arts.update(tokenid, {auction:0, price:won.price, totalsupply:1, auctiontime:0})
+		} else {
+			await Arts.update(tokenid, {auction:0, price:won.price, totalsupply:0, auctiontime:0})
 		}
 		await Arts.update(tokenid, {auction:0, price:won.price, auctiontime:0})
 	} catch (err:any) {
@@ -1186,7 +1189,6 @@ export const wonInAuction = async (tokenid:number): Promise<void> => {
 export const checkArts = async (): Promise<void> => {
 	try {
 		await initialize()
-
 		const created = now()
 		const campaign = await getCampaign();
 		if (campaign && campaign.lasttime<created) {
@@ -1195,12 +1197,13 @@ export const checkArts = async (): Promise<void> => {
 				const updates = []
 				let isAuction = false;
 				for (const v of rows) {
+					const art = artwork(v)
 					if (v.auction) {
 						await wonInAuction(v.id)
 						isAuction = true
+					} else {
+						updates.push({id:v.id, totalsupply:art.totalsupply - art.instock, instock:0, drop:0})
 					}
-					const art = artwork(v)
-					updates.push({id:v.id, totalsupply:art.totalsupply - art.instock, instock:0, drop:0})
 				}
 				if (updates.length) await Arts.insertOrUpdate(updates)
 				if (isAuction) await checktxs()
